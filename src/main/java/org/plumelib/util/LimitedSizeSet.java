@@ -57,10 +57,7 @@ public class LimitedSizeSet<T extends @Nullable Object> implements Serializable,
       throw new IllegalArgumentException("maxValues should be positive, is " + maxValues);
     }
     // this.maxValues = maxValues;
-    @SuppressWarnings({
-      "unchecked",
-      "value" // https://github.com/kelloggm/checker-framework/issues/174
-    })
+    @SuppressWarnings({"unchecked"})
     @Nullable T @MinLen(1) [] newValuesArray = (@Nullable T[]) new @Nullable Object[maxValues];
     values = newValuesArray;
     numValues = 0;
