@@ -83,7 +83,7 @@ public class CombinationIterator<T> implements Iterator<List<T>> {
   @RequiresNonNull("nextValue")
   private void advanceNext(@GuardSatisfied CombinationIterator<T> this) {
     for (int i = combinationSize - 1; i >= 0; i--) {
-      assert nextValue != null : "nextValue should be non-null inside the loop";
+      assert nextValue != null : "@AssumeAssertion(nullness): nextValue is non-null after the assertion";
       if (iterators[i].hasNext()) {
         nextValue.set(i, iterators[i].next());
         return;
