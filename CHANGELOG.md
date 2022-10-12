@@ -1,5 +1,15 @@
 # Plume-Util change log
 
+## 1.6.0 (??)
+
+- New methods `FilesPlume.createTempFile()`, which create sequential file names.
+- Some constructors are deprecated, for efficiency.
+- Support Java 18.
+
+## 1.5.9 (2022-07-12)
+
+- Java 17 is supported.
+
 ## 1.5.8 (2021-07-20)
 
 - Bug fix in `System.gcPercentage`.
@@ -96,12 +106,12 @@
 
 ## 1.3.0
 
-- New class `ToStringComparator`
+- New class `ToStringComparator` compares two objects according to the result of `toString`
 - New methods:
    - `UtilPlume.usedMemory` with no formal parameter
    - `UtilPlume.mapList`
 - Moved string methods from `UtilPlume` to new class `StringsPlume`;
-  the old versions still work but are are deprecated.
+  the old versions still work but are deprecated.
 
 ## 1.2.0
 
