@@ -19,8 +19,13 @@ import java.util.concurrent.atomic.AtomicLong;
  * </code></pre>
  *   <li>Wherever you would call {@code x.hashCode()}, instead call {@code treeUids.get(x)}.
  * </ol>
+ *
+ * @param <E> the type of elements that get a unique ID
  */
 public class UniqueIdMap<E> {
+
+  /** Create a new UniqueIdMap. */
+  public UniqueIdMap() {}
 
   /** The unique ID for the next-created object. */
   private final AtomicLong nextUid = new AtomicLong(0);

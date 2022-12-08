@@ -2,57 +2,40 @@
 
 package org.plumelib.util;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.nio.file.StandardOpenOption.APPEND;
-import static java.nio.file.StandardOpenOption.CREATE;
-
-import java.io.BufferedInputStream;
+import com.google.errorprone.annotations.InlineMe;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.Reader;
 import java.io.Serializable;
 import java.io.StringWriter;
-import java.io.Writer;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
-import java.util.StringTokenizer;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-import org.checkerframework.checker.index.qual.IndexOrHigh;
-import org.checkerframework.checker.index.qual.LTEqLengthOf;
 import org.checkerframework.checker.index.qual.NonNegative;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.regex.qual.Regex;
+import org.checkerframework.checker.nullness.qual.PolyNull;
+import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.common.value.qual.StaticallyExecutable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.checkerframework.dataflow.qual.SideEffectFree;
@@ -67,9 +50,6 @@ public final class UtilPlume {
   private UtilPlume() {
     throw new Error("do not instantiate");
   }
-
-  /** The system-specific line separator string. */
-  private static final String lineSep = System.lineSeparator();
 
   ///////////////////////////////////////////////////////////////////////////
   /// BitSet (this section is deprecated in favor of CollectionsPlume)
@@ -86,30 +66,12 @@ public final class UtilPlume {
    * @deprecated use CollectionsPlume.intersectionCardinalityAtLeast
    */
   @Deprecated // 2021-04-24
-  @SuppressWarnings({"allcheckers:purity", "lock"}) // side effect to local state (BitSet)
+  @InlineMe(
+      replacement = "CollectionsPlume.intersectionCardinalityAtLeast(a, b, i)",
+      imports = "org.plumelib.util.CollectionsPlume")
   @Pure
   public static boolean intersectionCardinalityAtLeast(BitSet a, BitSet b, @NonNegative int i) {
-    // Here are three implementation strategies to determine the
-    // cardinality of the intersection:
-    // 1. a.clone().and(b).cardinality()
-    // 2. do the above, but copy only a subset of the bits initially -- enough
-    //    that it should exceed the given number -- and if that fails, do the
-    //    whole thing.  Unfortunately, bits.get(int, int) isn't optimized
-    //    for the case where the indices line up, so I'm not sure at what
-    //    point this approach begins to dominate #1.
-    // 3. iterate through both sets with nextSetBit()
-
-    int size = Math.min(a.length(), b.length());
-    if (size > 10 * i) {
-      // The size is more than 10 times the limit.  So first try processing
-      // just a subset of the bits (4 times the limit).
-      BitSet intersection = a.get(0, 4 * i);
-      intersection.and(b);
-      if (intersection.cardinality() >= i) {
-        return true;
-      }
-    }
-    return (intersectionCardinality(a, b) >= i);
+    return CollectionsPlume.intersectionCardinalityAtLeast(a, b, i);
   }
 
   /**
@@ -124,26 +86,13 @@ public final class UtilPlume {
    * @deprecated use CollectionsPlume.intersectionCardinalityAtLeast
    */
   @Deprecated // 2021-04-24
-  @SuppressWarnings({"allcheckers:purity", "lock"}) // side effect to local state (BitSet)
+  @InlineMe(
+      replacement = "CollectionsPlume.intersectionCardinalityAtLeast(a, b, c, i)",
+      imports = "org.plumelib.util.CollectionsPlume")
   @Pure
   public static boolean intersectionCardinalityAtLeast(
       BitSet a, BitSet b, BitSet c, @NonNegative int i) {
-    // See comments in intersectionCardinalityAtLeast(BitSet, BitSet, int).
-    // This is a copy of that.
-
-    int size = Math.min(a.length(), b.length());
-    size = Math.min(size, c.length());
-    if (size > 10 * i) {
-      // The size is more than 10 times the limit.  So first try processing
-      // just a subset of the bits (4 times the limit).
-      BitSet intersection = a.get(0, 4 * i);
-      intersection.and(b);
-      intersection.and(c);
-      if (intersection.cardinality() >= i) {
-        return true;
-      }
-    }
-    return (intersectionCardinality(a, b, c) >= i);
+    return CollectionsPlume.intersectionCardinalityAtLeast(a, b, c, i);
   }
 
   /**
@@ -155,12 +104,12 @@ public final class UtilPlume {
    * @deprecated use CollectionsPlume.intersectionCardinality
    */
   @Deprecated // 2021-04-24
-  @SuppressWarnings({"allcheckers:purity", "lock"}) // side effect to local state (BitSet)
+  @InlineMe(
+      replacement = "CollectionsPlume.intersectionCardinality(a, b)",
+      imports = "org.plumelib.util.CollectionsPlume")
   @Pure
   public static int intersectionCardinality(BitSet a, BitSet b) {
-    BitSet intersection = (BitSet) a.clone();
-    intersection.and(b);
-    return intersection.cardinality();
+    return CollectionsPlume.intersectionCardinality(a, b);
   }
 
   /**
@@ -173,13 +122,13 @@ public final class UtilPlume {
    * @deprecated use CollectionsPlume.intersectionCardinality
    */
   @Deprecated // 2021-04-24
-  @SuppressWarnings({"allcheckers:purity", "lock"}) // side effect to local state (BitSet)
+  @InlineMe(
+      replacement = "CollectionsPlume.intersectionCardinality(a, b, c)",
+      imports = "org.plumelib.util.CollectionsPlume")
+  @SuppressWarnings({"lock"}) // side effect to local state (BitSet)
   @Pure
   public static int intersectionCardinality(BitSet a, BitSet b, BitSet c) {
-    BitSet intersection = (BitSet) a.clone();
-    intersection.and(b);
-    intersection.and(c);
-    return intersection.cardinality();
+    return CollectionsPlume.intersectionCardinality(a, b, c);
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -202,18 +151,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newFileInputStream}
    */
   @Deprecated // deprecated 2020-02-20
+  @InlineMe(
+      replacement = "FilesPlume.newFileInputStream(path)",
+      imports = "org.plumelib.util.FilesPlume")
   public static InputStream fileInputStream(Path path) throws IOException {
-    InputStream in;
-    if (path.endsWith(".gz")) {
-      try {
-        in = new GZIPInputStream(new FileInputStream(path.toFile()));
-      } catch (IOException e) {
-        throw new IOException("Problem while reading " + path, e);
-      }
-    } else {
-      in = new FileInputStream(path.toFile());
-    }
-    return in;
+    return FilesPlume.newFileInputStream(path);
   }
 
   /**
@@ -230,18 +172,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newFileInputStream}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newFileInputStream(file)",
+      imports = "org.plumelib.util.FilesPlume")
   public static InputStream fileInputStream(File file) throws IOException {
-    InputStream in;
-    if (file.getName().endsWith(".gz")) {
-      try {
-        in = new GZIPInputStream(new FileInputStream(file));
-      } catch (IOException e) {
-        throw new IOException("Problem while reading " + file, e);
-      }
-    } else {
-      in = new FileInputStream(file);
-    }
-    return in;
+    return FilesPlume.newFileInputStream(file);
   }
 
   /**
@@ -259,10 +194,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newFileReader(filename)",
+      imports = "org.plumelib.util.FilesPlume")
   public static InputStreamReader fileReader(String filename)
       throws FileNotFoundException, IOException {
-    // return fileReader(filename, "ISO-8859-1");
-    return fileReader(new File(filename), null);
+    return FilesPlume.newFileReader(filename);
   }
 
   /**
@@ -280,8 +217,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newFileReader(path)",
+      imports = "org.plumelib.util.FilesPlume")
   public static InputStreamReader fileReader(Path path) throws FileNotFoundException, IOException {
-    return fileReader(path.toFile(), null);
+    return FilesPlume.newFileReader(path);
   }
 
   /**
@@ -300,16 +240,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newFileReader(path, charsetName)",
+      imports = "org.plumelib.util.FilesPlume")
   public static InputStreamReader fileReader(Path path, @Nullable String charsetName)
       throws FileNotFoundException, IOException {
-    InputStream in = new FileInputStream(path.toFile());
-    InputStreamReader fileReader;
-    if (charsetName == null) {
-      fileReader = new InputStreamReader(in, UTF_8);
-    } else {
-      fileReader = new InputStreamReader(in, charsetName);
-    }
-    return fileReader;
+    return FilesPlume.newFileReader(path, charsetName);
   }
 
   /**
@@ -327,8 +263,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newFileReader(file)",
+      imports = "org.plumelib.util.FilesPlume")
   public static InputStreamReader fileReader(File file) throws FileNotFoundException, IOException {
-    return fileReader(file, null);
+    return FilesPlume.newFileReader(file);
   }
 
   /**
@@ -347,16 +286,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newFileReader(file, charsetName)",
+      imports = "org.plumelib.util.FilesPlume")
   public static InputStreamReader fileReader(File file, @Nullable String charsetName)
       throws FileNotFoundException, IOException {
-    InputStream in = new FileInputStream(file);
-    InputStreamReader fileReader;
-    if (charsetName == null) {
-      fileReader = new InputStreamReader(in, UTF_8);
-    } else {
-      fileReader = new InputStreamReader(in, charsetName);
-    }
-    return fileReader;
+    return FilesPlume.newFileReader(file, charsetName);
   }
 
   /**
@@ -374,9 +309,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newBufferedFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newBufferedFileReader(filename)",
+      imports = "org.plumelib.util.FilesPlume")
   public static BufferedReader bufferedFileReader(String filename)
       throws FileNotFoundException, IOException {
-    return bufferedFileReader(new File(filename));
+    return FilesPlume.newBufferedFileReader(filename);
   }
 
   /**
@@ -394,9 +332,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newBufferedFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newBufferedFileReader(file)",
+      imports = "org.plumelib.util.FilesPlume")
   public static BufferedReader bufferedFileReader(File file)
       throws FileNotFoundException, IOException {
-    return bufferedFileReader(file, null);
+    return FilesPlume.newBufferedFileReader(file);
   }
 
   /**
@@ -415,9 +356,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newBufferedFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newBufferedFileReader(filename)",
+      imports = "org.plumelib.util.FilesPlume")
   public static BufferedReader bufferedFileReader(String filename, @Nullable String charsetName)
       throws FileNotFoundException, IOException {
-    return bufferedFileReader(new File(filename), charsetName);
+    return FilesPlume.newBufferedFileReader(filename);
   }
 
   /**
@@ -436,10 +380,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newBufferedFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newBufferedFileReader(file, charsetName)",
+      imports = "org.plumelib.util.FilesPlume")
   public static BufferedReader bufferedFileReader(File file, @Nullable String charsetName)
       throws FileNotFoundException, IOException {
-    Reader fileReader = fileReader(file, charsetName);
-    return new BufferedReader(fileReader);
+    return FilesPlume.newBufferedFileReader(file, charsetName);
   }
 
   /**
@@ -457,9 +403,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newLineNumberFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newLineNumberFileReader(filename)",
+      imports = "org.plumelib.util.FilesPlume")
   public static LineNumberReader lineNumberFileReader(String filename)
       throws FileNotFoundException, IOException {
-    return lineNumberFileReader(new File(filename));
+    return FilesPlume.newLineNumberFileReader(filename);
   }
 
   /**
@@ -477,20 +426,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newLineNumberFileReader}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newLineNumberFileReader(file)",
+      imports = "org.plumelib.util.FilesPlume")
   public static LineNumberReader lineNumberFileReader(File file)
       throws FileNotFoundException, IOException {
-    Reader fileReader;
-    if (file.getName().endsWith(".gz")) {
-      try {
-        fileReader =
-            new InputStreamReader(new GZIPInputStream(new FileInputStream(file)), "ISO-8859-1");
-      } catch (IOException e) {
-        throw new IOException("Problem while reading " + file, e);
-      }
-    } else {
-      fileReader = new InputStreamReader(new FileInputStream(file), "ISO-8859-1");
-    }
-    return new LineNumberReader(fileReader);
+    return FilesPlume.newLineNumberFileReader(file);
   }
 
   /**
@@ -507,8 +448,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newBufferedFileWriter}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newBufferedFileWriter(filename)",
+      imports = "org.plumelib.util.FilesPlume")
   public static BufferedWriter bufferedFileWriter(String filename) throws IOException {
-    return bufferedFileWriter(filename, false);
+    return FilesPlume.newBufferedFileWriter(filename);
   }
 
   /**
@@ -527,19 +471,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newBufferedFileWriter}
    */
   @Deprecated // deprecated 2021-02-25
-  // Question:  should this be rewritten as a wrapper around bufferedFileOutputStream?
+  @InlineMe(
+      replacement = "FilesPlume.newBufferedFileWriter(filename, append)",
+      imports = "org.plumelib.util.FilesPlume")
   public static BufferedWriter bufferedFileWriter(String filename, boolean append)
       throws IOException {
-    if (filename.endsWith(".gz")) {
-      return new BufferedWriter(
-          new OutputStreamWriter(
-              new GZIPOutputStream(new FileOutputStream(filename, append)), UTF_8));
-    } else {
-      return Files.newBufferedWriter(
-          Paths.get(filename),
-          UTF_8,
-          append ? new StandardOpenOption[] {CREATE, APPEND} : new StandardOpenOption[] {CREATE});
-    }
+    return FilesPlume.newBufferedFileWriter(filename, append);
   }
 
   /**
@@ -558,13 +495,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#newBufferedFileOutputStream}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.newBufferedFileOutputStream(filename, append)",
+      imports = "org.plumelib.util.FilesPlume")
   public static BufferedOutputStream bufferedFileOutputStream(String filename, boolean append)
       throws IOException {
-    OutputStream os = new FileOutputStream(filename, append);
-    if (filename.endsWith(".gz")) {
-      os = new GZIPOutputStream(os);
-    }
-    return new BufferedOutputStream(os);
+    return FilesPlume.newBufferedFileOutputStream(filename, append);
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -580,14 +516,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#countLines}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.countLines(filename)",
+      imports = "org.plumelib.util.FilesPlume")
   public static long countLines(String filename) throws IOException {
-    long count = 0;
-    try (LineNumberReader reader = UtilPlume.lineNumberFileReader(filename)) {
-      while (reader.readLine() != null) {
-        count++;
-      }
-    }
-    return count;
+    return FilesPlume.countLines(filename);
   }
 
   /**
@@ -599,16 +532,12 @@ public final class UtilPlume {
    * @throws IOException if there was a problem reading the file
    * @deprecated use {@link Files#readAllLines}
    */
-  @Deprecated // use Files.readAllLines; deprecated 2021-01-03
+  @Deprecated // 2021-01-03
+  @InlineMe(
+      replacement = "Files.readAllLines(Paths.get(filename))",
+      imports = {"java.nio.file.Files", "java.nio.file.Paths"})
   public static List<String> fileLines(String filename) throws IOException {
-    List<String> textList = new ArrayList<>();
-    try (LineNumberReader reader = UtilPlume.lineNumberFileReader(filename)) {
-      String line;
-      while ((line = reader.readLine()) != null) {
-        textList.add(line);
-      }
-    }
-    return textList;
+    return Files.readAllLines(Paths.get(filename));
   }
 
   /**
@@ -620,8 +549,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#inferLineSeparator}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.inferLineSeparator(filename)",
+      imports = "org.plumelib.util.FilesPlume")
   public static String inferLineSeparator(String filename) throws IOException {
-    return inferLineSeparator(new File(filename));
+    return FilesPlume.inferLineSeparator(filename);
   }
 
   /**
@@ -633,40 +565,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#inferLineSeparator}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.inferLineSeparator(file)",
+      imports = "org.plumelib.util.FilesPlume")
   public static String inferLineSeparator(File file) throws IOException {
-    try (BufferedReader r = UtilPlume.bufferedFileReader(file)) {
-      int unix = 0;
-      int dos = 0;
-      int mac = 0;
-      while (true) {
-        String s = r.readLine();
-        if (s == null) {
-          break;
-        }
-        if (s.endsWith("\r\n")) {
-          dos++;
-        } else if (s.endsWith("\r")) {
-          mac++;
-        } else if (s.endsWith("\n")) {
-          unix++;
-        } else {
-          // This can happen only if the last line is not terminated.
-        }
-      }
-      if ((dos > mac && dos > unix) || (lineSep.equals("\r\n") && dos >= unix && dos >= mac)) {
-        return "\r\n";
-      }
-      if ((mac > dos && mac > unix) || (lineSep.equals("\r") && mac >= dos && mac >= unix)) {
-        return "\r";
-      }
-      if ((unix > dos && unix > mac) || (lineSep.equals("\n") && unix >= dos && unix >= mac)) {
-        return "\n";
-      }
-      // The two non-preferred line endings are tied and have more votes than
-      // the preferred line ending.  Give up and return the line separator
-      // for the system on which Java is currently running.
-      return lineSep;
-    }
+    return FilesPlume.inferLineSeparator(file);
   }
 
   /**
@@ -678,9 +581,12 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#equalFiles}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.equalFiles(file1, file2, false)",
+      imports = "org.plumelib.util.FilesPlume")
   @Pure
   public static boolean equalFiles(String file1, String file2) {
-    return equalFiles(file1, file2, false);
+    return FilesPlume.equalFiles(file1, file2, false);
   }
 
   /**
@@ -693,31 +599,13 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#equalFiles}
    */
   @Deprecated // deprecated 2021-02-25
-  @SuppressWarnings({"allcheckers:purity", "lock"}) // reads files, side effects local state
+  @InlineMe(
+      replacement = "FilesPlume.equalFiles(file1, file2, trimLines)",
+      imports = "org.plumelib.util.FilesPlume")
+  @SuppressWarnings({"lock"}) // reads files, side effects local state
   @Pure
   public static boolean equalFiles(String file1, String file2, boolean trimLines) {
-    try (LineNumberReader reader1 = UtilPlume.lineNumberFileReader(file1);
-        LineNumberReader reader2 = UtilPlume.lineNumberFileReader(file2); ) {
-      String line1 = reader1.readLine();
-      String line2 = reader2.readLine();
-      while (line1 != null && line2 != null) {
-        if (trimLines) {
-          line1 = line1.trim();
-          line2 = line2.trim();
-        }
-        if (!line1.equals(line2)) {
-          return false;
-        }
-        line1 = reader1.readLine();
-        line2 = reader2.readLine();
-      }
-      if (line1 == null && line2 == null) {
-        return true;
-      }
-      return false;
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
+    return FilesPlume.equalFiles(file1, file2, trimLines);
   }
 
   /**
@@ -728,30 +616,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#canCreateAndWrite}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.canCreateAndWrite(file)",
+      imports = "org.plumelib.util.FilesPlume")
   public static boolean canCreateAndWrite(File file) {
-    if (file.exists()) {
-      return file.canWrite();
-    } else {
-      File directory = file.getParentFile();
-      if (directory == null) {
-        directory = new File(".");
-      }
-      // Does this test need "directory.canRead()" also?
-      return directory.canWrite();
-    }
-
-    /// Old implementation; is this equivalent to the new one, above??
-    // try {
-    //   if (file.exists()) {
-    //     return file.canWrite();
-    //   } else {
-    //     file.createNewFile();
-    //     file.delete();
-    //     return true;
-    //   }
-    // } catch (IOException e) {
-    //   return false;
-    // }
+    return FilesPlume.canCreateAndWrite(file);
   }
 
   ///
@@ -778,26 +647,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#createTempDir}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.createTempDir(prefix, suffix)",
+      imports = "org.plumelib.util.FilesPlume")
   public static File createTempDir(String prefix, String suffix) throws IOException {
-    String fs = File.separator;
-    String path = System.getProperty("java.io.tmpdir") + fs + System.getProperty("user.name") + fs;
-    File pathFile = new File(path);
-    if (!pathFile.isDirectory()) {
-      if (!pathFile.mkdirs()) {
-        throw new IOException("Could not create directory: " + pathFile);
-      }
-    }
-    // Call Java runtime to create a file with a unique name
-    File tmpfile = File.createTempFile(prefix + "_", "_", pathFile);
-    String tmpDirPath = tmpfile.getPath() + suffix;
-    File tmpDir = new File(tmpDirPath);
-    if (!tmpDir.mkdirs()) {
-      throw new IOException("Could not create directory: " + tmpDir);
-    }
-    // Now that we have created our directory, we should get rid
-    // of the intermediate TempFile we created.
-    tmpfile.delete();
-    return tmpDir;
+    return FilesPlume.createTempDir(prefix, suffix);
   }
 
   /**
@@ -808,8 +662,9 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#deleteDir}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(replacement = "FilesPlume.deleteDir(dirName)", imports = "org.plumelib.util.FilesPlume")
   public static boolean deleteDir(String dirName) {
-    return deleteDir(new File(dirName));
+    return FilesPlume.deleteDir(dirName);
   }
 
   /**
@@ -820,14 +675,9 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#deleteDir}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(replacement = "FilesPlume.deleteDir(dir)", imports = "org.plumelib.util.FilesPlume")
   public static boolean deleteDir(File dir) {
-    File[] children = dir.listFiles();
-    if (children != null) { // null means not a directory, or I/O error occurred.
-      for (File child : children) {
-        deleteDir(child);
-      }
-    }
-    return dir.delete();
+    return FilesPlume.deleteDir(dir);
   }
 
   ///
@@ -886,16 +736,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#expandFilename}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.expandFilename(name)",
+      imports = "org.plumelib.util.FilesPlume")
   public static File expandFilename(File name) {
-    String path = name.getPath();
-    String newname = expandFilename(path);
-    @SuppressWarnings({"interning", "ReferenceEquality"})
-    boolean changed = newname != path;
-    if (changed) {
-      return new File(newname);
-    } else {
-      return name;
-    }
+    return FilesPlume.expandFilename(name);
   }
 
   /**
@@ -906,12 +751,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#expandFilename}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.expandFilename(name)",
+      imports = "org.plumelib.util.FilesPlume")
   public static String expandFilename(String name) {
-    if (name.contains("~")) {
-      return name.replace("~", userHome);
-    } else {
-      return name;
-    }
+    return FilesPlume.expandFilename(name);
   }
 
   /**
@@ -927,9 +771,10 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#javaSource}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(replacement = "FilesPlume.javaSource(name)", imports = "org.plumelib.util.FilesPlume")
   public static String javaSource(File name) {
 
-    return name.getPath().replace("\\", "\\\\");
+    return FilesPlume.javaSource(name);
   }
 
   ///
@@ -945,15 +790,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#writeObject}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.writeObject(o, file)",
+      imports = "org.plumelib.util.FilesPlume")
   public static void writeObject(Object o, File file) throws IOException {
-    // 8192 is the buffer size in BufferedReader
-    OutputStream bytes = new BufferedOutputStream(new FileOutputStream(file), 8192);
-    if (file.getName().endsWith(".gz")) {
-      bytes = new GZIPOutputStream(bytes);
-    }
-    ObjectOutputStream objs = new ObjectOutputStream(bytes);
-    objs.writeObject(o);
-    objs.close();
+    FilesPlume.writeObject(o, file);
   }
 
   /**
@@ -968,19 +809,10 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#readObject}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(replacement = "FilesPlume.readObject(file)", imports = "org.plumelib.util.FilesPlume")
   @SuppressWarnings("BanSerializableRead") // wrapper around dangerous API
   public static Object readObject(File file) throws IOException, ClassNotFoundException {
-    // 8192 is the buffer size in BufferedReader
-    InputStream istream = new BufferedInputStream(new FileInputStream(file), 8192);
-    if (file.getName().endsWith(".gz")) {
-      try {
-        istream = new GZIPInputStream(istream);
-      } catch (IOException e) {
-        throw new IOException("Problem while reading " + file, e);
-      }
-    }
-    ObjectInputStream objs = new ObjectInputStream(istream);
-    return objs.readObject();
+    return FilesPlume.readObject(file);
   }
 
   /**
@@ -992,18 +824,9 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#readerContents}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(replacement = "FilesPlume.readerContents(r)", imports = "org.plumelib.util.FilesPlume")
   public static String readerContents(Reader r) {
-    try {
-      StringBuilder contents = new StringBuilder();
-      int ch;
-      while ((ch = r.read()) != -1) {
-        contents.append((char) ch);
-      }
-      r.close();
-      return contents.toString();
-    } catch (Exception e) {
-      throw new Error("Unexpected error in readerContents(" + r + ")", e);
-    }
+    return FilesPlume.readerContents(r);
   }
 
   // an alternate name would be "fileContents".
@@ -1019,23 +842,9 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#readFile}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(replacement = "FilesPlume.readFile(file)", imports = "org.plumelib.util.FilesPlume")
   public static String readFile(File file) {
-
-    try {
-      BufferedReader reader = UtilPlume.bufferedFileReader(file);
-      StringBuilder contents = new StringBuilder();
-      String line = reader.readLine();
-      while (line != null) {
-        contents.append(line);
-        // Note that this converts line terminators!
-        contents.append(lineSep);
-        line = reader.readLine();
-      }
-      reader.close();
-      return contents.toString();
-    } catch (Exception e) {
-      throw new Error("Unexpected error in readFile(" + file + ")", e);
-    }
+    return FilesPlume.readFile(file);
   }
 
   /**
@@ -1048,15 +857,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#writeFile}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.writeFile(file, contents)",
+      imports = "org.plumelib.util.FilesPlume")
   public static void writeFile(File file, String contents) {
-
-    try {
-      Writer writer = Files.newBufferedWriter(file.toPath(), UTF_8);
-      writer.write(contents, 0, contents.length());
-      writer.close();
-    } catch (Exception e) {
-      throw new Error("Unexpected error in writeFile(" + file + ")", e);
-    }
+    FilesPlume.writeFile(file, contents);
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1082,7 +887,7 @@ public final class UtilPlume {
    * @return a hash of the arguments
    */
   public static int hash(long @Nullable [] a, long @Nullable [] b) {
-    return hash(hash(a), hash(b));
+    return Objects.hash(Arrays.hashCode(a), Arrays.hashCode(b));
   }
 
   // In hashing, there are two separate issues.  First, one must convert the input datum into a
@@ -1106,9 +911,10 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Double#hashCode()}
    */
-  @Deprecated // use Double.hashCode(); deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Double.hashCode(x)")
   public static int hash(double x) {
-    return hash(Double.doubleToLongBits(x));
+    return Double.hashCode(x);
   }
 
   /**
@@ -1119,7 +925,8 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Objects#hash}
    */
-  @Deprecated // use Objects.hash; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Objects.hash(a, b)", imports = "java.util.Objects")
   public static int hash(double a, double b) {
     return Objects.hash(a, b);
   }
@@ -1133,7 +940,8 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Objects#hash}
    */
-  @Deprecated // use Objects.hash; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Objects.hash(a, b, c)", imports = "java.util.Objects")
   public static int hash(double a, double b, double c) {
     return Objects.hash(a, b, c);
   }
@@ -1145,7 +953,8 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Arrays#hashCode}
    */
-  @Deprecated // use Arrays.hashCode; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Arrays.hashCode(a)", imports = "java.util.Arrays")
   public static int hash(double @Nullable [] a) {
     return Arrays.hashCode(a);
   }
@@ -1161,13 +970,9 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Long#hashCode()}
    */
-  @Deprecated // use Long.hashCode; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Long.hashCode(l)")
   public static int hash(long l) {
-    // If possible, use the value itself.
-    if (l >= Integer.MIN_VALUE && l <= Integer.MAX_VALUE) {
-      return (int) l;
-    }
-
     return Long.hashCode(l);
   }
 
@@ -1179,7 +984,8 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Objects#hash}
    */
-  @Deprecated // use Objects.hash; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Objects.hash(a, b)", imports = "java.util.Objects")
   public static int hash(long a, long b) {
     return Objects.hash(a, b);
   }
@@ -1193,7 +999,8 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Objects#hash}
    */
-  @Deprecated // use Objects.hash; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Objects.hash(a, b, c)", imports = "java.util.Objects")
   public static int hash(long a, long b, long c) {
     return Objects.hash(a, b, c);
   }
@@ -1205,7 +1012,8 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Arrays#hashCode}
    */
-  @Deprecated // use Arrays.hashCode; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Arrays.hashCode(a)", imports = "java.util.Arrays")
   public static int hash(long @Nullable [] a) {
     return Arrays.hashCode(a);
   }
@@ -1217,9 +1025,10 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link String#hashCode}
    */
-  @Deprecated // use String.hashCode; deprecated 2021-01-05
+  @Deprecated // use Objects.hashCode; deprecated 2021-01-05
+  @InlineMe(replacement = "Objects.hashCode(a)", imports = "java.util.Objects")
   public static int hash(@Nullable String a) {
-    return (a == null) ? 0 : a.hashCode();
+    return Objects.hashCode(a);
   }
 
   /**
@@ -1230,7 +1039,8 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Objects#hash}
    */
-  @Deprecated // use Objects.hash; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Objects.hash(a, b)", imports = "java.util.Objects")
   public static int hash(@Nullable String a, @Nullable String b) {
     return Objects.hash(a, b);
   }
@@ -1244,7 +1054,8 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Objects#hash}
    */
-  @Deprecated // use Objects.hash; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Objects.hash(a, b, c)", imports = "java.util.Objects")
   public static int hash(@Nullable String a, @Nullable String b, @Nullable String c) {
     return Objects.hash(a, b, c);
   }
@@ -1256,7 +1067,8 @@ public final class UtilPlume {
    * @return a hash of the arguments
    * @deprecated use {@link Arrays#hashCode}
    */
-  @Deprecated // use Arrays.hashCode; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "Arrays.hashCode(a)", imports = "java.util.Arrays")
   public static int hash(@Nullable String @Nullable [] a) {
     return Arrays.hashCode(a);
   }
@@ -1272,8 +1084,12 @@ public final class UtilPlume {
    * @return a string representation of the map
    * @deprecated use {@link StringsPlume#mapToStringAndClass}
    */
-  @Deprecated // use StringsPlume.mapToStringAndClass; deprecated 2020-12-02
-  public static String mapToStringAndClass(Map<?, ?> m) {
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.mapToStringAndClass(m)",
+      imports = "org.plumelib.util.StringsPlume")
+  public static String mapToStringAndClass(
+      Map<? extends @Signed @PolyNull Object, ? extends @Signed @PolyNull Object> m) {
     return StringsPlume.mapToStringAndClass(m);
   }
 
@@ -1284,7 +1100,10 @@ public final class UtilPlume {
    * @return a string representation of the value and its run-time class
    * @deprecated use {@link StringsPlume#toStringAndClass}
    */
-  @Deprecated // use StringsPlume.toStringAndClass; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.toStringAndClass(o)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String toStringAndClass(@Nullable Object o) {
     return StringsPlume.toStringAndClass(o);
   }
@@ -1316,7 +1135,7 @@ public final class UtilPlume {
     // TimeLimitProcess p = new TimeLimitProcess(pb.start(), TIMEOUT_SEC * 1000);
     try {
       Process p = pb.start();
-      String output = UtilPlume.streamString(p.getInputStream());
+      String output = FilesPlume.streamString(p.getInputStream());
       return output;
     } catch (IOException e) {
       return "IOException: " + e.getMessage();
@@ -1338,6 +1157,9 @@ public final class UtilPlume {
    */
   @Pure
   @Deprecated // 2021-03-28
+  @InlineMe(
+      replacement = "UtilPlume.getBooleanProperty(p, key)",
+      imports = "org.plumelib.util.UtilPlume")
   public static boolean propertyIsTrue(Properties p, String key) {
     return getBooleanProperty(p, key);
   }
@@ -1436,21 +1258,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#streamCopy}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.streamCopy(from, to)",
+      imports = "org.plumelib.util.FilesPlume")
   public static void streamCopy(InputStream from, OutputStream to) {
-    byte[] buffer = new byte[1024];
-    int bytes;
-    try {
-      while (true) {
-        bytes = from.read(buffer);
-        if (bytes == -1) {
-          return;
-        }
-        to.write(buffer, 0, bytes);
-      }
-    } catch (IOException e) {
-      e.printStackTrace();
-      throw new Error(e);
-    }
+    FilesPlume.streamCopy(from, to);
   }
 
   /**
@@ -1461,12 +1273,9 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#streamString}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(replacement = "FilesPlume.streamString(is)", imports = "org.plumelib.util.FilesPlume")
   public static String streamString(InputStream is) {
-    ByteArrayOutputStream baos = new ByteArrayOutputStream();
-    streamCopy(is, baos);
-    @SuppressWarnings("DefaultCharset") // JDK 8 version does not accept UTF_8 argument
-    String result = baos.toString();
-    return result;
+    return FilesPlume.streamString(is);
   }
 
   /**
@@ -1478,15 +1287,11 @@ public final class UtilPlume {
    * @deprecated use {@link FilesPlume#streamLines}
    */
   @Deprecated // deprecated 2021-02-25
+  @InlineMe(
+      replacement = "FilesPlume.streamLines(stream)",
+      imports = "org.plumelib.util.FilesPlume")
   public static List<String> streamLines(InputStream stream) throws IOException {
-    List<String> outputLines = new ArrayList<>();
-    try (BufferedReader rdr = new BufferedReader(new InputStreamReader(stream, UTF_8))) {
-      String line;
-      while ((line = rdr.readLine()) != null) {
-        outputLines.add(line);
-      }
-    }
-    return outputLines;
+    return FilesPlume.streamLines(stream);
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1503,22 +1308,10 @@ public final class UtilPlume {
    * @return target with all instances of oldStr replaced by newStr
    * @deprecated use {@link String#replace}
    */
-  @Deprecated // use String.replace; deprecated 2020-09-07
+  @Deprecated // 2020-09-07
+  @InlineMe(replacement = "target.replace(oldStr, newStr)")
   public static String replaceString(String target, String oldStr, String newStr) {
-    if (oldStr.equals("")) {
-      throw new IllegalArgumentException();
-    }
-
-    StringBuilder result = new StringBuilder();
-    @IndexOrHigh("target") int lastend = 0;
-    int pos;
-    while ((pos = target.indexOf(oldStr, lastend)) != -1) {
-      result.append(target.substring(lastend, pos));
-      result.append(newStr);
-      lastend = pos + oldStr.length();
-    }
-    result.append(target.substring(lastend));
-    return result.toString();
+    return target.replace(oldStr, newStr);
   }
 
   /**
@@ -1535,18 +1328,12 @@ public final class UtilPlume {
    *     target if it does not start with oldStr
    * @deprecated use {@link StringsPlume#replacePrefix}
    */
-  @SuppressWarnings("index:argument") // startsWith implies indexes fit
-  @Deprecated // use StringsPlume.replacePrefix; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.replacePrefix(target, oldStr, newStr)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String replacePrefix(String target, String oldStr, String newStr) {
-    if (target.startsWith(oldStr)) {
-      if (newStr.isEmpty()) {
-        return target.substring(oldStr.length());
-      } else {
-        return newStr + target.substring(oldStr.length());
-      }
-    } else {
-      return target;
-    }
+    return StringsPlume.replacePrefix(target, oldStr, newStr);
   }
 
   /**
@@ -1563,18 +1350,12 @@ public final class UtilPlume {
    *     target if it does not start with oldStr
    * @deprecated use {@link StringsPlume#replaceSuffix}
    */
-  @SuppressWarnings("lowerbound:argument") // endsWith implies indexes fit
-  @Deprecated // use StringsPlume.replaceSuffix; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.replaceSuffix(target, oldStr, newStr)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String replaceSuffix(String target, String oldStr, String newStr) {
-    if (target.endsWith(oldStr)) {
-      if (newStr.isEmpty()) {
-        return target.substring(0, target.length() - oldStr.length());
-      } else {
-        return target.substring(0, target.length() - oldStr.length()) + newStr;
-      }
-    } else {
-      return target;
-    }
+    return StringsPlume.replaceSuffix(target, oldStr, newStr);
   }
 
   /**
@@ -1585,9 +1366,12 @@ public final class UtilPlume {
    * @return the printed representation of {@code o}, with each line prefixed by the given prefix
    * @deprecated use {@link StringsPlume#prefixLines}
    */
-  @Deprecated // use StringsPlume.prefixLines; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.prefixLines(prefix, o)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String prefixLines(String prefix, @Nullable Object o) {
-    return prefix + prefixLinesExceptFirst(prefix, o);
+    return StringsPlume.prefixLines(prefix, o);
   }
 
   /**
@@ -1600,12 +1384,12 @@ public final class UtilPlume {
    *     the given prefix
    * @deprecated use {@link StringsPlume#prefixLinesExceptFirst}
    */
-  @Deprecated // use StringsPlume.prefixLinesExceptFirst; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.prefixLinesExceptFirst(prefix, o)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String prefixLinesExceptFirst(String prefix, @Nullable Object o) {
-    if (o == null) {
-      return "null";
-    }
-    return o.toString().replace(System.lineSeparator(), System.lineSeparator() + prefix);
+    return StringsPlume.prefixLinesExceptFirst(prefix, o);
   }
 
   /**
@@ -1618,13 +1402,12 @@ public final class UtilPlume {
    *     space characters
    * @deprecated use {@link StringsPlume#indentLines}
    */
-  @Deprecated // use StringsPlume.indentLines; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.indentLines(indent, o)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String indentLines(@NonNegative int indent, @Nullable Object o) {
-    if (indent == 0) {
-      return (o == null) ? "null" : o.toString();
-    }
-    String prefix = new String(new char[indent]).replace('\0', ' ');
-    return prefixLines(prefix, o);
+    return StringsPlume.indentLines(indent, o);
   }
 
   /**
@@ -1637,13 +1420,12 @@ public final class UtilPlume {
    *     {@code indent} space characters
    * @deprecated use {@link StringsPlume#indentLinesExceptFirst}
    */
-  @Deprecated // use StringsPlume.indentLinesExceptFirst; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.indentLinesExceptFirst(indent, o)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String indentLinesExceptFirst(@NonNegative int indent, @Nullable Object o) {
-    if (indent == 0) {
-      return (o == null) ? "null" : o.toString();
-    }
-    String prefix = new String(new char[indent]).replace('\0', ' ');
-    return prefixLinesExceptFirst(prefix, o);
+    return StringsPlume.indentLinesExceptFirst(indent, o);
   }
 
   /**
@@ -1662,21 +1444,16 @@ public final class UtilPlume {
    * @deprecated use {@link String#split}
    */
   @Deprecated // use String.split; deprecated 2020-12-02
+  @InlineMe(replacement = "s.split(\"\\\\\" + delim)")
+  @SuppressWarnings("regex:argument") // todo: "\\" + char is a regex
   public static String[] split(String s, char delim) {
-    ArrayList<String> resultList = new ArrayList<>();
-    for (int delimpos = s.indexOf(delim); delimpos != -1; delimpos = s.indexOf(delim)) {
-      resultList.add(s.substring(0, delimpos));
-      s = s.substring(delimpos + 1);
-    }
-    resultList.add(s);
-    String[] result = resultList.toArray(new @NonNull String[resultList.size()]);
-    return result;
+    return s.split("\\" + delim);
   }
 
   /**
    * Returns an array of Strings representing the characters between successive instances of the
    * delimiter String. Always returns an array of length at least 1 (it might contain only the empty
-   * string), which takes a regular expression whereas this method takes a string.
+   * string).
    *
    * <p>Consider using the built-in <a
    * href="https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/lang/String.html#split(java.lang.String)">String.split</a>
@@ -1690,19 +1467,9 @@ public final class UtilPlume {
    * @deprecated use {@link String#split}
    */
   @Deprecated // use String.split; deprecated 2020-12-02
+  @InlineMe(replacement = "s.split(Pattern.quote(delim))", imports = "java.util.regex.Pattern")
   public static String[] split(String s, String delim) {
-    int delimlen = delim.length();
-    if (delimlen == 0) {
-      throw new Error("Second argument to split was empty.");
-    }
-    ArrayList<String> resultList = new ArrayList<>();
-    for (int delimpos = s.indexOf(delim); delimpos != -1; delimpos = s.indexOf(delim)) {
-      resultList.add(s.substring(0, delimpos));
-      s = s.substring(delimpos + delimlen);
-    }
-    resultList.add(s);
-    String[] result = resultList.toArray(new @NonNull String[resultList.size()]);
-    return result;
+    return s.split(Pattern.quote(delim));
   }
 
   /**
@@ -1719,9 +1486,10 @@ public final class UtilPlume {
   @SuppressWarnings("value:statically.executable.not.pure") // pure wrt `equals()` but not `==`
   @SideEffectFree
   @StaticallyExecutable
-  @Deprecated // use StringsPlume.splitLines; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(replacement = "StringsPlume.splitLines(s)", imports = "org.plumelib.util.StringsPlume")
   public static String[] splitLines(String s) {
-    return s.split("\r\n?|\n\r?", -1);
+    return StringsPlume.splitLines(s);
   }
 
   /**
@@ -1740,20 +1508,11 @@ public final class UtilPlume {
    * @deprecated use {@link #join(CharSequence, Object...)} which has the arguments in the other
    *     order
    */
-  @Deprecated // use join(CharSequence, Object...) which has the arguments in the other order;
-  // deprecated 2020-02-20
-  public static <T> String join(T[] a, CharSequence delim) {
-    if (a.length == 0) {
-      return "";
-    }
-    if (a.length == 1) {
-      return String.valueOf(a[0]);
-    }
-    StringBuilder sb = new StringBuilder(String.valueOf(a[0]));
-    for (int i = 1; i < a.length; i++) {
-      sb.append(delim).append(a[i]);
-    }
-    return sb.toString();
+  @Deprecated // 2020-02-20
+  @InlineMe(replacement = "StringsPlume.join(delim, a)", imports = "org.plumelib.util.StringsPlume")
+  @SuppressWarnings("nullness:type.argument")
+  public static <T> String join(@Signed T[] a, CharSequence delim) {
+    return StringsPlume.join(delim, a);
   }
 
   /**
@@ -1771,20 +1530,12 @@ public final class UtilPlume {
    *     between
    * @deprecated use {@link StringsPlume#join}
    */
+  @Deprecated // 2020-12-02
+  @InlineMe(replacement = "StringsPlume.join(delim, a)", imports = "org.plumelib.util.StringsPlume")
   @SafeVarargs
-  @Deprecated // use StringsPlume.join; deprecated 2020-12-02
-  public static <T> String join(CharSequence delim, T... a) {
-    if (a.length == 0) {
-      return "";
-    }
-    if (a.length == 1) {
-      return String.valueOf(a[0]);
-    }
-    StringBuilder sb = new StringBuilder(String.valueOf(a[0]));
-    for (int i = 1; i < a.length; i++) {
-      sb.append(delim).append(a[i]);
-    }
-    return sb.toString();
+  @SuppressWarnings({"varargs", "nullness:type.argument"})
+  public static <T> String join(CharSequence delim, @Signed T... a) {
+    return StringsPlume.join(delim, a);
   }
 
   /**
@@ -1797,10 +1548,11 @@ public final class UtilPlume {
    * @deprecated use {@link StringsPlume#joinLines}
    */
   @SafeVarargs
-  @SuppressWarnings("varargs")
-  @Deprecated // use StringsPlume.joinLines; deprecated 2020-12-02
-  public static <T> String joinLines(T... a) {
-    return join(lineSep, a);
+  @SuppressWarnings({"varargs", "nullness:type.argument"})
+  @Deprecated // 2020-12-02
+  @InlineMe(replacement = "StringsPlume.joinLines(a)", imports = "org.plumelib.util.StringsPlume")
+  public static <T> String joinLines(@Signed T... a) {
+    return StringsPlume.joinLines(a);
   }
 
   /**
@@ -1817,21 +1569,10 @@ public final class UtilPlume {
    * @deprecated use {@link #join(CharSequence, Iterable)} which has the arguments in the other
    *     order
    */
-  @Deprecated // use join(CharSequence, Iterable) which has the arguments in the other order;
-  // deprecated 2020-12-02
-  public static String join(Iterable<?> v, CharSequence delim) {
-    StringBuilder sb = new StringBuilder();
-    boolean first = true;
-    Iterator<?> itor = v.iterator();
-    while (itor.hasNext()) {
-      if (first) {
-        first = false;
-      } else {
-        sb.append(delim);
-      }
-      sb.append(itor.next());
-    }
-    return sb.toString();
+  @Deprecated // 2020-12-02
+  @InlineMe(replacement = "StringsPlume.join(delim, v)", imports = "org.plumelib.util.StringsPlume")
+  public static String join(Iterable<? extends @Signed @PolyNull Object> v, CharSequence delim) {
+    return StringsPlume.join(delim, v);
   }
 
   /**
@@ -1847,20 +1588,10 @@ public final class UtilPlume {
    *     between
    * @deprecated use {@link StringsPlume#join}
    */
-  @Deprecated // use StringsPlume.join; deprecated 2020-12-02
-  public static String join(CharSequence delim, Iterable<?> v) {
-    StringBuilder sb = new StringBuilder();
-    boolean first = true;
-    Iterator<?> itor = v.iterator();
-    while (itor.hasNext()) {
-      if (first) {
-        first = false;
-      } else {
-        sb.append(delim);
-      }
-      sb.append(itor.next());
-    }
-    return sb.toString();
+  @Deprecated // deprecated 2020-12-02
+  @InlineMe(replacement = "StringsPlume.join(delim, v)", imports = "org.plumelib.util.StringsPlume")
+  public static String join(CharSequence delim, Iterable<? extends @Signed @PolyNull Object> v) {
+    return StringsPlume.join(delim, v);
   }
 
   /**
@@ -1872,9 +1603,10 @@ public final class UtilPlume {
    * @return the concatenation of the string representations of the values, each on its own line
    * @deprecated use {@link StringsPlume#joinLines}
    */
-  @Deprecated // use StringsPlume.joinLines; deprecated 2020-12-02
-  public static String joinLines(Iterable<?> v) {
-    return join(lineSep, v);
+  @Deprecated // 2020-12-02
+  @InlineMe(replacement = "StringsPlume.joinLines(v)", imports = "org.plumelib.util.StringsPlume")
+  public static String joinLines(Iterable<? extends @Signed @PolyNull Object> v) {
+    return StringsPlume.joinLines(v);
   }
 
   /**
@@ -1882,9 +1614,12 @@ public final class UtilPlume {
    * @return quoted version of orig
    * @deprecated use {@link #escapeJava(String)}
    */
-  @Deprecated // use escapeJava(String); deprecated 2020-02-20
+  @Deprecated // 2020-02-20
+  @InlineMe(
+      replacement = "StringsPlume.escapeJava(orig)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String escapeNonJava(String orig) {
-    return escapeJava(orig);
+    return StringsPlume.escapeJava(orig);
   }
 
   /**
@@ -1900,54 +1635,12 @@ public final class UtilPlume {
    * @return quoted version of orig
    * @deprecated use {@link StringsPlume#escapeJava}
    */
-  @Deprecated // use StringsPlume.escapeJava; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.escapeJava(orig)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String escapeJava(String orig) {
-    StringBuilder sb = new StringBuilder();
-    // The previous escape character was seen right before this position.
-    @IndexOrHigh("orig") int postEsc = 0;
-    int origLen = orig.length();
-    for (int i = 0; i < origLen; i++) {
-      char c = orig.charAt(i);
-      switch (c) {
-        case '\"':
-        case '\\':
-        case '\b':
-        case '\f':
-        case '\n': // not lineSep
-        case '\r':
-        case '\t':
-          if (postEsc < i) {
-            sb.append(orig.substring(postEsc, i));
-          }
-          sb.append(escapeJava(c));
-          postEsc = i + 1;
-          break;
-
-        default:
-          if (c >= ' ' && c <= '~') {
-            // Nothing to do: i gets incremented
-          } else if (c <= '\377') {
-            if (postEsc < i) {
-              sb.append(orig.substring(postEsc, i));
-            }
-            sb.append("\\");
-            int cAsInt = (int) c;
-            sb.append(String.format("%03o", cAsInt));
-            postEsc = i + 1;
-            break;
-          } else {
-            sb.append("\\u");
-            sb.append(String.format("%04x", (int) c));
-            postEsc = i + 1;
-            break;
-          }
-      }
-    }
-    if (sb.length() == 0) {
-      return orig;
-    }
-    sb.append(orig.substring(postEsc));
-    return sb.toString();
+    return StringsPlume.escapeJava(orig);
   }
 
   /**
@@ -1970,7 +1663,7 @@ public final class UtilPlume {
    */
   @Deprecated // use StringsPlume.escapeJava; deprecated 2020-12-02
   public static String escapeJava(Character ch) {
-    return escapeJava(ch.charValue());
+    return StringsPlume.escapeJava(ch);
   }
 
   // If the overhead of this is too high to call in escapeJava(String), then inline it there.
@@ -1983,24 +1676,7 @@ public final class UtilPlume {
    */
   @Deprecated // use StringsPlume.escapeJava; deprecated 2020-12-02
   public static String escapeJava(char c) {
-    switch (c) {
-      case '\"':
-        return "\\\"";
-      case '\\':
-        return "\\\\";
-      case '\b':
-        return "\\b";
-      case '\f':
-        return "\\f";
-      case '\n': // not lineSep
-        return "\\n"; // not lineSep
-      case '\r':
-        return "\\r";
-      case '\t':
-        return "\\t";
-      default:
-        return new String(new char[] {c});
-    }
+    return StringsPlume.escapeJava(c);
   }
 
   /**
@@ -2011,51 +1687,12 @@ public final class UtilPlume {
    * @return quoted version of orig
    * @deprecated use {@link StringsPlume#escapeNonASCII}
    */
-  @Deprecated // use StringsPlume.escapeNonASCII; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.escapeNonASCII(orig)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String escapeNonASCII(String orig) {
-    StringBuilder sb = new StringBuilder();
-    int origLen = orig.length();
-    for (int i = 0; i < origLen; i++) {
-      char c = orig.charAt(i);
-      sb.append(escapeNonASCII(c));
-    }
-    return sb.toString();
-  }
-
-  /**
-   * Like escapeJava(), but quote more characters so that the result is sure to be printable ASCII.
-   *
-   * <p>This implementation is not particularly optimized.
-   *
-   * @param c character to quote
-   * @return quoted version of c
-   */
-  private static String escapeNonASCII(char c) {
-    if (c == '"') {
-      return "\\\"";
-    } else if (c == '\\') {
-      return "\\\\";
-    } else if (c == '\n') { // not lineSep
-      return "\\n"; // not lineSep
-    } else if (c == '\r') {
-      return "\\r";
-    } else if (c == '\t') {
-      return "\\t";
-    } else if (c >= ' ' && c <= '~') {
-      return new String(new char[] {c});
-    } else if (c < 256) {
-      String octal = Integer.toOctalString(c);
-      while (octal.length() < 3) {
-        octal = '0' + octal;
-      }
-      return "\\" + octal;
-    } else {
-      String hex = Integer.toHexString(c);
-      while (hex.length() < 4) {
-        hex = "0" + hex;
-      }
-      return "\\u" + hex;
-    }
+    return StringsPlume.escapeNonASCII(orig);
   }
 
   /**
@@ -2070,9 +1707,12 @@ public final class UtilPlume {
    * @return quoted version of orig
    * @deprecated use {@link #unescapeJava(String)}
    */
-  @Deprecated // use unescapeJava(String); deprecated 2020-02-20
+  @Deprecated // 2020-02-20
+  @InlineMe(
+      replacement = "StringsPlume.unescapeJava(orig)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String unescapeNonJava(String orig) {
-    return unescapeJava(orig);
+    return StringsPlume.unescapeJava(orig);
   }
 
   /**
@@ -2087,118 +1727,12 @@ public final class UtilPlume {
    * @return quoted version of orig
    * @deprecated use {@link StringsPlume#unescapeJava}
    */
-  @Deprecated // use StringsPlume.unescapeJava; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.unescapeJava(orig)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String unescapeJava(String orig) {
-    StringBuilder sb = new StringBuilder();
-    // The previous escape character was seen just before this position.
-    @LTEqLengthOf("orig") int postEsc = 0;
-    int thisEsc = orig.indexOf('\\');
-    while (thisEsc != -1) {
-      if (thisEsc == orig.length() - 1) {
-        sb.append(orig.substring(postEsc, thisEsc + 1));
-        postEsc = thisEsc + 1;
-        break;
-      }
-      switch (orig.charAt(thisEsc + 1)) {
-        case 'b':
-          sb.append(orig.substring(postEsc, thisEsc));
-          sb.append('\b');
-          postEsc = thisEsc + 2;
-          break;
-        case 'f':
-          sb.append(orig.substring(postEsc, thisEsc));
-          sb.append('\f');
-          postEsc = thisEsc + 2;
-          break;
-        case 'n':
-          sb.append(orig.substring(postEsc, thisEsc));
-          sb.append('\n'); // not lineSep
-          postEsc = thisEsc + 2;
-          break;
-        case 'r':
-          sb.append(orig.substring(postEsc, thisEsc));
-          sb.append('\r');
-          postEsc = thisEsc + 2;
-          break;
-        case 't':
-          sb.append(orig.substring(postEsc, thisEsc));
-          sb.append('\t');
-          postEsc = thisEsc + 2;
-          break;
-        case '\\':
-          // This is not in the default case because the search would find
-          // the quoted backslash.  Here we include the first backslash in
-          // the output, but not the first.
-          sb.append(orig.substring(postEsc, thisEsc + 1));
-          postEsc = thisEsc + 2;
-          break;
-
-        case 'u':
-          // Unescape Unicode characters.
-          sb.append(orig.substring(postEsc, thisEsc));
-          char unicodeChar = 0;
-          int ii = thisEsc + 2;
-          // The specification permits one or more 'u' characters.
-          while (ii < orig.length() && orig.charAt(ii) == 'u') {
-            ii++;
-          }
-          // The specification requires exactly 4 hexadecimal characters.
-          // This is more liberal.  (Should it be?)
-          int limit = Math.min(ii + 4, orig.length());
-          while (ii < limit) {
-            int thisDigit = Character.digit(orig.charAt(ii), 16);
-            if (thisDigit == -1) {
-              break;
-            }
-            unicodeChar = (char) ((unicodeChar * 16) + thisDigit);
-            ii++;
-          }
-          sb.append(unicodeChar);
-          postEsc = ii;
-          break;
-
-        case '0':
-        case '1':
-        case '2':
-        case '3':
-        case '4':
-        case '5':
-        case '6':
-        case '7':
-          // Unescape octal characters.
-          sb.append(orig.substring(postEsc, thisEsc));
-          char octalChar = 0;
-          int iii = thisEsc + 1;
-          while (iii < Math.min(thisEsc + 4, orig.length())) {
-            int thisDigit = Character.digit(orig.charAt(iii), 8);
-            if (thisDigit == -1) {
-              break;
-            }
-            int newValue = (octalChar * 8) + thisDigit;
-            if (newValue > 0377) {
-              break;
-            }
-            octalChar = (char) newValue;
-            iii++;
-          }
-          sb.append(octalChar);
-          postEsc = iii;
-          break;
-
-        default:
-          // In the default case, retain the character following the backslash,
-          // but discard the backslash itself.  "\*" is just a one-character string.
-          sb.append(orig.substring(postEsc, thisEsc));
-          postEsc = thisEsc + 1;
-          break;
-      }
-      thisEsc = orig.indexOf('\\', postEsc);
-    }
-    if (postEsc == 0) {
-      return orig;
-    }
-    sb.append(orig.substring(postEsc));
-    return sb.toString();
+    return StringsPlume.unescapeJava(orig);
   }
 
   /**
@@ -2209,11 +1743,12 @@ public final class UtilPlume {
    * @return version of arg, with whitespace abutting delimiter removed
    * @deprecated use {@link StringsPlume#removeWhitespaceAround}
    */
-  @Deprecated // use StringsPlume.removeWhitespaceAround; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.removeWhitespaceAround(arg, delimiter)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String removeWhitespaceAround(String arg, String delimiter) {
-    arg = removeWhitespaceBefore(arg, delimiter);
-    arg = removeWhitespaceAfter(arg, delimiter);
-    return arg;
+    return StringsPlume.removeWhitespaceAround(arg, delimiter);
   }
 
   /**
@@ -2224,31 +1759,12 @@ public final class UtilPlume {
    * @return version of arg, with whitespace after delimiter removed
    * @deprecated use {@link StringsPlume#removeWhitespaceAfter}
    */
-  @Deprecated // use StringsPlume.removeWhitespaceAfter; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.removeWhitespaceAfter(arg, delimiter)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String removeWhitespaceAfter(String arg, String delimiter) {
-    if (delimiter == null || delimiter.equals("")) {
-      throw new IllegalArgumentException("Bad delimiter: \"" + delimiter + "\"");
-    }
-    // String orig = arg;
-    int delimLen = delimiter.length();
-    int delimIndex = arg.indexOf(delimiter);
-    while (delimIndex > -1) {
-      int nonWsIndex = delimIndex + delimLen;
-      while (nonWsIndex < arg.length() && Character.isWhitespace(arg.charAt(nonWsIndex))) {
-        nonWsIndex++;
-      }
-      // if (nonWsIndex == arg.length()) {
-      //   System.out.println("No nonspace character at end of: " + arg);
-      // } else {
-      //   System.out.println("'" + arg.charAt(nonWsIndex) + "' not a space character at " +
-      //       nonWsIndex + " in: " + arg);
-      // }
-      if (nonWsIndex != delimIndex + delimLen) {
-        arg = arg.substring(0, delimIndex + delimLen) + arg.substring(nonWsIndex);
-      }
-      delimIndex = arg.indexOf(delimiter, delimIndex + 1);
-    }
-    return arg;
+    return StringsPlume.removeWhitespaceAfter(arg, delimiter);
   }
 
   /**
@@ -2259,31 +1775,12 @@ public final class UtilPlume {
    * @return version of arg, with whitespace before delimiter removed
    * @deprecated use {@link StringsPlume#removeWhitespaceBefore}
    */
-  @Deprecated // use StringsPlume.removeWhitespaceBefore; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.removeWhitespaceBefore(arg, delimiter)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String removeWhitespaceBefore(String arg, String delimiter) {
-    if (delimiter == null || delimiter.equals("")) {
-      throw new IllegalArgumentException("Bad delimiter: \"" + delimiter + "\"");
-    }
-    // System.out.println("removeWhitespaceBefore(\"" + arg + "\", \"" + delimiter + "\")");
-    // String orig = arg;
-    int delimIndex = arg.indexOf(delimiter);
-    while (delimIndex > -1) {
-      int nonWsIndex = delimIndex - 1;
-      while (nonWsIndex >= 0 && Character.isWhitespace(arg.charAt(nonWsIndex))) {
-        nonWsIndex--;
-      }
-      // if (nonWsIndex == -1) {
-      //   System.out.println("No nonspace character at front of: " + arg);
-      // } else {
-      //   System.out.println("'" + arg.charAt(nonWsIndex) + "' not a space character at " +
-      //       nonWsIndex + " in: " + arg);
-      // }
-      if (nonWsIndex != delimIndex - 1) {
-        arg = arg.substring(0, nonWsIndex + 1) + arg.substring(delimIndex);
-      }
-      delimIndex = arg.indexOf(delimiter, nonWsIndex + 2);
-    }
-    return arg;
+    return StringsPlume.removeWhitespaceBefore(arg, delimiter);
   }
 
   /**
@@ -2295,18 +1792,12 @@ public final class UtilPlume {
    * @return noun, if n==1; otherwise, pluralization of noun
    * @deprecated use {@link StringsPlume#nplural}
    */
-  @Deprecated // use StringsPlume.nplural; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.nplural(n, noun)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String nplural(int n, String noun) {
-    if (n == 1) {
-      return n + " " + noun;
-    } else if (noun.endsWith("ch")
-        || noun.endsWith("s")
-        || noun.endsWith("sh")
-        || noun.endsWith("x")) {
-      return n + " " + noun + "es";
-    } else {
-      return n + " " + noun + "s";
-    }
+    return StringsPlume.nplural(n, noun);
   }
 
   /**
@@ -2318,17 +1809,12 @@ public final class UtilPlume {
    * @return s truncated or padded to length characters
    * @deprecated use {@link StringsPlume#lpad}
    */
-  @Deprecated // use StringsPlume.lpad; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.lpad(s, length)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String lpad(String s, @NonNegative int length) {
-    if (s.length() < length) {
-      StringBuilder buf = new StringBuilder();
-      for (int i = s.length(); i < length; i++) {
-        buf.append(' ');
-      }
-      return buf.toString() + s;
-    } else {
-      return s.substring(0, length);
-    }
+    return StringsPlume.lpad(s, length);
   }
 
   /**
@@ -2340,17 +1826,12 @@ public final class UtilPlume {
    * @return s truncated or padded to length characters
    * @deprecated use {@link StringsPlume#rpad}
    */
-  @Deprecated // use StringsPlume.rpad; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.rpad(s, length)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String rpad(String s, @NonNegative int length) {
-    if (s.length() < length) {
-      StringBuilder buf = new StringBuilder(s);
-      for (int i = s.length(); i < length; i++) {
-        buf.append(' ');
-      }
-      return buf.toString();
-    } else {
-      return s.substring(0, length);
-    }
+    return StringsPlume.rpad(s, length);
   }
 
   /**
@@ -2361,9 +1842,12 @@ public final class UtilPlume {
    * @return a string representation of num truncated or padded to length characters
    * @deprecated use {@link StringsPlume#rpad}
    */
-  @Deprecated // use StringsPlume.rpad; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.rpad(num, length)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String rpad(int num, @NonNegative int length) {
-    return rpad(String.valueOf(num), length);
+    return StringsPlume.rpad(num, length);
   }
 
   /**
@@ -2374,9 +1858,12 @@ public final class UtilPlume {
    * @return a string representation of num truncated or padded to length characters
    * @deprecated use {@link StringsPlume#rpad}
    */
-  @Deprecated // use StringsPlume.rpad; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.rpad(num, length)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String rpad(double num, @NonNegative int length) {
-    return rpad(String.valueOf(num), length);
+    return StringsPlume.rpad(num, length);
   }
 
   /**
@@ -2384,11 +1871,14 @@ public final class UtilPlume {
    *
    * @deprecated use {@link StringsPlume.NullableStringComparator}
    */
-  @Deprecated // use StringsPlume.NullableStringComparator; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
   public static class NullableStringComparator
       implements Comparator<@Nullable String>, Serializable {
     /** Unique identifier for serialization. If you add or remove fields, change this number. */
     static final long serialVersionUID = 20150812L;
+
+    /** Create a new NullableStringComparator. */
+    public NullableStringComparator() {}
 
     @Pure
     @Override
@@ -2419,10 +1909,13 @@ public final class UtilPlume {
    *
    * @deprecated use {@link StringsPlume.ObjectComparator}
    */
-  @Deprecated // use StringsPlume.ObjectComparator; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
   public static class ObjectComparator implements Comparator<@Nullable Object>, Serializable {
     /** Unique identifier for serialization. If you add or remove fields, change this number. */
     static final long serialVersionUID = 20170420L;
+
+    /** Create a new ObjectComparator. */
+    public ObjectComparator() {}
 
     @SuppressWarnings({
       "allcheckers:purity.not.deterministic.call",
@@ -2459,15 +1952,10 @@ public final class UtilPlume {
    * @return number of times the character appears in the string
    * @deprecated use {@link StringsPlume#count}
    */
-  @Deprecated // use StringsPlume.count; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(replacement = "StringsPlume.count(s, ch)", imports = "org.plumelib.util.StringsPlume")
   public static int count(String s, int ch) {
-    int result = 0;
-    int pos = s.indexOf(ch);
-    while (pos > -1) {
-      result++;
-      pos = s.indexOf(ch, pos + 1);
-    }
-    return result;
+    return StringsPlume.count(s, ch);
   }
 
   /**
@@ -2478,18 +1966,10 @@ public final class UtilPlume {
    * @return number of times the substring appears in the string
    * @deprecated use {@link StringsPlume#count}
    */
-  @Deprecated // use StringsPlume.count; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(replacement = "StringsPlume.count(s, sub)", imports = "org.plumelib.util.StringsPlume")
   public static int count(String s, String sub) {
-    if (sub.equals("")) {
-      throw new IllegalArgumentException("second argument must not be empty");
-    }
-    int result = 0;
-    int pos = s.indexOf(sub);
-    while (pos > -1) {
-      result++;
-      pos = s.indexOf(sub, pos + 1);
-    }
-    return result;
+    return StringsPlume.count(s, sub);
   }
 
   /**
@@ -2501,42 +1981,13 @@ public final class UtilPlume {
    * @return an abbreviated string representation of the value
    * @deprecated use {@link StringsPlume#abbreviateNumber}
    */
-  @Deprecated // use StringsPlume.abbreviateNumber; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.abbreviateNumber(val)",
+      imports = "org.plumelib.util.StringsPlume")
   public static String abbreviateNumber(long val) {
-
-    double dval = (double) val;
-    String mag = "";
-
-    if (val < 1000) {
-      // nothing to do
-    } else if (val < 1000000) {
-      dval = val / 1000.0;
-      mag = "K";
-    } else if (val < 1000000000) {
-      dval = val / 1000000.0;
-      mag = "M";
-    } else {
-      dval = val / 1000000000.0;
-      mag = "G";
-    }
-
-    String precision = "0";
-    if (dval < 10) {
-      precision = "2";
-    } else if (dval < 100) {
-      precision = "1";
-    }
-
-    @SuppressWarnings("formatter") // format string computed from precision and mag
-    String result = String.format("%,1." + precision + "f" + mag, dval);
-    return result;
+    return StringsPlume.abbreviateNumber(val);
   }
-
-  // From
-  // https://stackoverflow.com/questions/37413816/get-number-of-placeholders-in-formatter-format-string
-  /** Regex that matches a format specifier. Some correspond to arguments and some do not. */
-  private static @Regex(6) Pattern formatSpecifier =
-      Pattern.compile("%(\\d+\\$)?([-#+ 0,(\\<]*)?(\\d+)?(\\.\\d+)?([tT])?([a-zA-Z%])");
 
   /**
    * Returns the number of arguments that the given format string takes. This is the number of
@@ -2546,26 +1997,12 @@ public final class UtilPlume {
    * @return the number of format specifiers in the string
    * @deprecated use {@link StringsPlume#countFormatArguments}
    */
-  @Deprecated // use StringsPlume.countFormatArguments; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.countFormatArguments(s)",
+      imports = "org.plumelib.util.StringsPlume")
   public static int countFormatArguments(String s) {
-    int result = 0;
-    int maxIndex = 0;
-    Matcher matcher = formatSpecifier.matcher(s);
-    while (matcher.find()) {
-      String argumentIndex = matcher.group(1);
-      if (argumentIndex != null) {
-        @SuppressWarnings("lowerbound:argument") // group contains >= 2 chars
-        int thisIndex = Integer.parseInt(argumentIndex.substring(0, argumentIndex.length() - 1));
-        maxIndex = Math.max(maxIndex, thisIndex);
-        continue;
-      }
-      String conversion = matcher.group(6);
-      assert conversion != null : "@AssumeAssertion(nullness): nonempty capturing group";
-      if (!(conversion.equals("%") || conversion.equals("n"))) {
-        result++;
-      }
-    }
-    return Math.max(maxIndex, result);
+    return StringsPlume.countFormatArguments(s);
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -2586,9 +2023,12 @@ public final class UtilPlume {
    * @return vector of strings resulting from tokenization
    * @deprecated use {@link StringsPlume#tokens}
    */
-  @Deprecated // use StringsPlume.tokens; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.tokens(str, delim, returnDelims)",
+      imports = "org.plumelib.util.StringsPlume")
   public static ArrayList<Object> tokens(String str, String delim, boolean returnDelims) {
-    return CollectionsPlume.makeArrayList(new StringTokenizer(str, delim, returnDelims));
+    return StringsPlume.tokens(str, delim, returnDelims);
   }
 
   /**
@@ -2600,9 +2040,12 @@ public final class UtilPlume {
    * @return vector of strings resulting from tokenization
    * @deprecated use {@link StringsPlume#tokens}
    */
-  @Deprecated // use StringsPlume.tokens; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(
+      replacement = "StringsPlume.tokens(str, delim)",
+      imports = "org.plumelib.util.StringsPlume")
   public static ArrayList<Object> tokens(String str, String delim) {
-    return CollectionsPlume.makeArrayList(new StringTokenizer(str, delim));
+    return StringsPlume.tokens(str, delim);
   }
 
   /**
@@ -2613,9 +2056,10 @@ public final class UtilPlume {
    * @return vector of strings resulting from tokenization
    * @deprecated use {@link StringsPlume#tokens}
    */
-  @Deprecated // use StringsPlume.tokens; deprecated 2020-12-02
+  @Deprecated // 2020-12-02
+  @InlineMe(replacement = "StringsPlume.tokens(str)", imports = "org.plumelib.util.StringsPlume")
   public static ArrayList<Object> tokens(String str) {
-    return CollectionsPlume.makeArrayList(new StringTokenizer(str));
+    return StringsPlume.tokens(str);
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -2630,7 +2074,8 @@ public final class UtilPlume {
    * @param millis the length of time to sleep in milliseconds
    * @deprecated use {@link SystemPlume#sleep}
    */
-  @Deprecated // use SystemPlume.sleep; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "SystemPlume.sleep(millis)", imports = "org.plumelib.util.SystemPlume")
   public static void sleep(long millis) {
     SystemPlume.sleep(millis);
   }
@@ -2644,7 +2089,8 @@ public final class UtilPlume {
    * @return the amount of used memory
    * @deprecated use {@link SystemPlume#usedMemory()}
    */
-  @Deprecated // use SystemPlume.usedMemory(); deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "SystemPlume.usedMemory()", imports = "org.plumelib.util.SystemPlume")
   public static long usedMemory() {
     return SystemPlume.usedMemory();
   }
@@ -2657,7 +2103,10 @@ public final class UtilPlume {
    * @return the amount of used memory
    * @deprecated use {@link SystemPlume#usedMemory(boolean)}
    */
-  @Deprecated // use SystemPlume.usedMemory(boolean); deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(
+      replacement = "SystemPlume.usedMemory(forceGc)",
+      imports = "org.plumelib.util.SystemPlume")
   public static long usedMemory(boolean forceGc) {
     return SystemPlume.usedMemory(forceGc);
   }
@@ -2668,7 +2117,8 @@ public final class UtilPlume {
    *
    * @deprecated use {@link SystemPlume#gc}
    */
-  @Deprecated // use SystemPlume.gc; deprecated 2021-01-05
+  @Deprecated // 2021-01-05
+  @InlineMe(replacement = "SystemPlume.gc()", imports = "org.plumelib.util.SystemPlume")
   public static void gc() {
     SystemPlume.gc();
   }
@@ -2679,30 +2129,34 @@ public final class UtilPlume {
 
   /**
    * Returns a String representation of the backtrace of the given Throwable. To see a backtrace at
-   * the the current location, do {@code backtrace(new Throwable())}.
+   * the current location, do {@code backtrace(new Throwable())}.
    *
    * @param t the Throwable to obtain a backtrace of
    * @return a String representation of the backtrace of the given Throwable
    * @deprecated use {@link #stackTraceToString}
    */
-  @Deprecated // use stackTraceToString; deprecated 2020-02-20
+  @Deprecated // 2020-02-20
+  @InlineMe(
+      replacement = "UtilPlume.stackTraceToString(t)",
+      imports = "org.plumelib.util.UtilPlume")
   public static String backTrace(Throwable t) {
     return stackTraceToString(t);
   }
 
   /**
    * Returns a String representation of the stack trace (the backtrace) of the given Throwable. For
-   * a stack trace at the the current location, do {@code stackTraceToString(new Throwable())}.
+   * a stack trace at the current location, do {@code stackTraceToString(new Throwable())}.
    *
    * @param t the Throwable to obtain a stack trace of
    * @return a String representation of the stack trace of the given Throwable
    */
   public static String stackTraceToString(Throwable t) {
-    StringWriter sw = new StringWriter();
-    PrintWriter pw = new PrintWriter(sw);
-    t.printStackTrace(pw);
-    pw.close();
-    String result = sw.toString();
-    return result;
+    try (StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw)) {
+      t.printStackTrace(pw);
+      return sw.toString();
+    } catch (IOException e) {
+      throw new UncheckedIOException(e);
+    }
   }
 }
