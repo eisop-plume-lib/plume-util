@@ -23,7 +23,9 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import org.checkerframework.checker.lock.qual.GuardSatisfied;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.signedness.qual.UnknownSignedness;
 import org.checkerframework.dataflow.qual.Pure;
 import org.checkerframework.dataflow.qual.SideEffectFree;
 
@@ -89,6 +91,8 @@ import org.checkerframework.dataflow.qual.SideEffectFree;
  * whose associated value object, in turn, strongly refers to the key of the first value object.
  * This problem may be fixed in a future release.
  *
+ * @param <K> the type of the map keys
+ * @param <V> the type of the map values
  * @version 1.5, 98/09/30
  * @author Mark Reinhold
  * @since JDK1.2
@@ -345,7 +349,8 @@ public final class WeakHasherMap<K, V> extends AbstractMap<K, V> implements Map<
    */
   @Pure
   @Override
-  public @Nullable V get(Object key) { // type of argument is Object, not K
+  public @Nullable V get(
+      @UnknownSignedness @GuardSatisfied Object key) { // type of argument is Object, not K
     @SuppressWarnings("unchecked")
     K kkey = (K) key;
     return hash.get(WeakKeyCreate(kkey));
@@ -391,7 +396,12 @@ public final class WeakHasherMap<K, V> extends AbstractMap<K, V> implements Map<
 
   /* -- Views -- */
 
-  /** Internal class for entries */
+  /**
+   * Internal class for entries
+   *
+   * @param <K> the type of the entry keys
+   * @param <V> the type of the entry values
+   */
   // This can't be static, again because of dependence on hasher.
   @SuppressWarnings("TypeParameterShadowing")
   private final class Entry<K, V> implements Map.Entry<K, V> {
@@ -481,6 +491,9 @@ public final class WeakHasherMap<K, V> extends AbstractMap<K, V> implements Map<
   private final class EntrySet extends AbstractSet<Map.Entry<K, V>> {
     /** hashEntrySet. */
     Set<Map.Entry<WeakKey, V>> hashEntrySet = hash.entrySet();
+
+    /** Create a new EntrySet. */
+    public EntrySet() {}
 
     @Override
     public Iterator<Map.Entry<K, V>> iterator() {

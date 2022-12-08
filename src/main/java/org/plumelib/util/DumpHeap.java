@@ -9,7 +9,13 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 
 /** Defines a static method {@link #dumpHeap} that dumps the heap to an .hprof file. */
+@SuppressWarnings("signedness") // lack of annotations on ManagementFactory and reflection
 public class DumpHeap {
+
+  /** Do not instantiate. */
+  private DumpHeap() {
+    throw new Error("Do not instantiate");
+  }
 
   /**
    * The HotSpot Diagnostic MBean. Its type is Object, in case HotSpotDiagnosticMXBean is not
