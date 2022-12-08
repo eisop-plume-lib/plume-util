@@ -1,8 +1,10 @@
 # Plume-Util change log
 
-## 1.6.0 (??)
+## 1.6.0 (2022-10-17)
 
-- New methods `FilesPlume.createTempFile()`, which create sequential file names.
+- New class `ArrayMap` is an efficient representation for very small maps.
+- New methods `FilesPlume.createTempFile(...)` create sequential file names.
+- New methods in `RegexUtil`: `matchesSomeRegex`, `everyStringMatchesSomeRegex`, `matchesNoRegex`, `noStringMatchesAnyRegex`.
 - Some constructors are deprecated, for efficiency.
 - Support Java 18.
 

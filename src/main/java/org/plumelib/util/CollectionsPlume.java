@@ -26,6 +26,7 @@ import java.util.function.Function;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.lock.qual.GuardSatisfied;
+import org.checkerframework.checker.mustcall.qual.MustCallUnknown;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -58,7 +59,7 @@ public final class CollectionsPlume {
    * @param l a list to sort
    * @param c a sorted version of the list
    */
-  public static <T> List<T> sortList(List<T> l, Comparator<? super T> c) {
+  public static <T> List<T> sortList(List<T> l, Comparator<@MustCallUnknown ? super T> c) {
     List<T> result = new ArrayList<>(l);
     Collections.sort(result, c);
     return result;
@@ -349,9 +350,11 @@ public final class CollectionsPlume {
    * @return a list of the results of applying {@code f} to the elements of {@code iterable}
    */
   public static <
-          @KeyForBottom FROM extends @Nullable @UnknownKeyFor Object,
-          @KeyForBottom TO extends @Nullable @UnknownKeyFor Object>
-      List<TO> mapList(Function<? super FROM, ? extends TO> f, Iterable<FROM> iterable) {
+          @KeyForBottom FROM extends @Nullable @UnknownKeyFor @MustCallUnknown Object,
+          @KeyForBottom TO extends @Nullable @UnknownKeyFor @MustCallUnknown Object>
+      List<TO> mapList(
+          @MustCallUnknown Function<@MustCallUnknown ? super FROM, ? extends TO> f,
+          Iterable<FROM> iterable) {
     List<TO> result;
 
     if (iterable instanceof RandomAccess) {
@@ -395,7 +398,8 @@ public final class CollectionsPlume {
   public static <
           @KeyForBottom FROM extends @Nullable @UnknownKeyFor Object,
           @KeyForBottom TO extends @Nullable @UnknownKeyFor Object>
-      List<TO> mapList(Function<? super FROM, ? extends TO> f, FROM[] a) {
+      List<TO> mapList(
+          @MustCallUnknown Function<@MustCallUnknown ? super FROM, ? extends TO> f, FROM[] a) {
     int size = a.length;
     List<TO> result = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
@@ -425,7 +429,8 @@ public final class CollectionsPlume {
   public static <
           @KeyForBottom FROM extends @Nullable @UnknownKeyFor Object,
           @KeyForBottom TO extends @Nullable @UnknownKeyFor Object>
-      List<TO> transform(Iterable<FROM> iterable, Function<? super FROM, ? extends TO> f) {
+      List<TO> transform(
+          Iterable<FROM> iterable, Function<@MustCallUnknown ? super FROM, ? extends TO> f) {
     return mapList(f, iterable);
   }
 
@@ -671,7 +676,11 @@ public final class CollectionsPlume {
   // Making these classes into functions didn't work because I couldn't get
   // their arguments into a scope that Java was happy with.
 
-  /** Converts an Enumeration into an Iterator. */
+  /**
+   * Converts an Enumeration into an Iterator.
+   *
+   * @param <T> the type of elements of the enumeration and iterator
+   */
   public static final class EnumerationIterator<T> implements Iterator<T> {
     /** The enumeration that this object wraps. */
     Enumeration<T> e;
@@ -703,7 +712,11 @@ public final class CollectionsPlume {
     }
   }
 
-  /** Converts an Iterator into an Enumeration. */
+  /**
+   * Converts an Iterator into an Enumeration.
+   *
+   * @param <T> the type of elements of the enumeration and iterator
+   */
   @SuppressWarnings("JdkObsolete")
   public static final class IteratorEnumeration<T> implements Enumeration<T> {
     /** The iterator that this object wraps. */
@@ -734,6 +747,8 @@ public final class CollectionsPlume {
    * An Iterator that returns first the elements returned by its first argument, then the elements
    * returned by its second argument. Like {@link MergedIterator}, but specialized for the case of
    * two arguments.
+   *
+   * @param <T> the type of elements of the iterator
    */
   public static final class MergedIterator2<T> implements Iterator<T> {
     /** The first of the two iterators that this object merges. */
@@ -779,6 +794,8 @@ public final class CollectionsPlume {
    * An Iterator that returns the elements in each of its argument Iterators, in turn. The argument
    * is an Iterator of Iterators. Like {@link MergedIterator2}, but generalized to arbitrary number
    * of iterators.
+   *
+   * @param <T> the type of elements of the iterator
    */
   public static final class MergedIterator<T> implements Iterator<T> {
     /** The iterators that this object merges. */
@@ -821,7 +838,11 @@ public final class CollectionsPlume {
     }
   }
 
-  /** An iterator that only returns elements that match the given Filter. */
+  /**
+   * An iterator that only returns elements that match the given Filter.
+   *
+   * @param <T> the type of elements of the iterator
+   */
   public static final class FilteredIterator<T extends @Nullable Object> implements Iterator<T> {
     /** The iterator that this object is filtering. */
     Iterator<T> itor;
@@ -886,6 +907,8 @@ public final class CollectionsPlume {
   /**
    * Returns an iterator just like its argument, except that the first and last elements are
    * removed. They can be accessed via the {@link #getFirst} and {@link #getLast} methods.
+   *
+   * @param <T> the type of elements of the iterator
    */
   public static final class RemoveFirstAndLastIterator<T> implements Iterator<T> {
     /** The wrapped iterator. */
@@ -1117,8 +1140,8 @@ public final class CollectionsPlume {
    * @param m a map whose keyset will be sorted
    * @return a sorted version of m.keySet()
    */
-  public static <K extends Comparable<? super K>, V> Collection<@KeyFor("#1") K> sortedKeySet(
-      Map<K, V> m) {
+  public static <K extends Comparable<@MustCallUnknown ? super K>, V>
+      Collection<@KeyFor("#1") K> sortedKeySet(Map<K, V> m) {
     ArrayList<@KeyFor("#1") K> theKeys = new ArrayList<>(m.keySet());
     Collections.sort(theKeys);
     return theKeys;
