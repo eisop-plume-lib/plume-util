@@ -21,7 +21,7 @@ repositories {
 ext.errorproneVersion = '2.16'
 
 dependencies {
-  implementation 'org.plumelib:reflection-util:1.0.5'
+  implementation 'org.plumelib:reflection-util:1.0.6'
     implementation "com.google.errorprone:error_prone_core:${errorproneVersion}"
 
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.1'
