@@ -2,20 +2,22 @@ plugins {
   id 'java-library'
 
   // To create a fat jar build/libs/...-all.jar, run: ./gradlew shadowJar
-  id 'com.github.johnrengelman.shadow' version '7.1.2'
+  id 'com.github.johnrengelman.shadow' version '8.1.1'
 
   // Code formatting; defines targets "spotlessApply" and "spotlessCheck"
-  id 'com.diffplug.spotless' version '6.14.0' apply false
+  // Requires JDK 11 or higher; the plugin crashes under JDK 8.
+  id 'com.diffplug.spotless' version '6.18.0'
 
   // Error Prone linter
-  id('net.ltgt.errorprone') version '3.0.1'
+  id('net.ltgt.errorprone') version '3.1.0'
 
   // Checker Framework pluggable type-checking
-  id 'org.checkerframework' version '0.6.23'
+  id 'org.checkerframework' version '0.6.26'
 }
 
 repositories {
   mavenCentral()
+  maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
 
 ext.errorproneVersion = '2.18.0'
@@ -23,15 +25,20 @@ ext.errorproneVersion = '2.18.0'
 dependencies {
   implementation 'org.plumelib:reflection-util:1.0.6'
 
-  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.2'
+  testImplementation 'org.junit.jupiter:junit-jupiter-api:5.9.3'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
 }
 
 // To upload to Maven Central, see instructions in the file.
 apply from: "${buildscript.sourceFile.parent}/gradle/mavencentral.gradle"
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+if (JavaVersion.current().compareTo(org.gradle.api.JavaVersion.VERSION_20) < 0) {
+  sourceCompatibility = 1.8
+  targetCompatibility = 1.8
+} else {
+  sourceCompatibility = 11
+  targetCompatibility = 11
+}
 
 test {
   useJUnitPlatform {
@@ -45,31 +52,27 @@ test {
   }
 }
 
-ext.isJava11orHigher = JavaVersion.current() >= JavaVersion.VERSION_11
-if (isJava11orHigher) {
-  apply plugin: 'com.diffplug.spotless'
-  spotless {
-    format 'misc', {
-      // define the files to apply `misc` to
-      target '*.gradle', '*.md', '.gitignore'
+spotless {
+  format 'misc', {
+    // define the files to apply `misc` to
+    target '*.md', '.gitignore'
 
-      // define the steps to apply to those files
-      trimTrailingWhitespace()
-      indentWithSpaces(2)
-      endWithNewline()
-    }
-    java {
-      targetExclude('**/WeakIdentityHashMap.java')
-      googleJavaFormat()
-      formatAnnotations()
-    }
-    groovyGradle {
-      target '**/*.gradle'
-      greclipse()  // which formatter Spotless should use to format .gradle files.
-      indentWithSpaces(2)
-      trimTrailingWhitespace()
-      // endWithNewline() // Don't want to end empty files with a newline
-    }
+    // define the steps to apply to those files
+    trimTrailingWhitespace()
+    indentWithSpaces(2)
+    endWithNewline()
+  }
+  java {
+    targetExclude('**/WeakIdentityHashMap.java')
+    googleJavaFormat()
+    formatAnnotations()
+  }
+  groovyGradle {
+    target '**/*.gradle'
+    greclipse()  // which formatter Spotless should use to format .gradle files.
+    indentWithSpaces(2)
+    trimTrailingWhitespace()
+    // endWithNewline() // Don't want to end empty files with a newline
   }
 }
 
@@ -80,7 +83,8 @@ dependencies {
 }
 tasks.withType(JavaCompile).configureEach {
   // "-processing" avoids javac warning "No processor claimed any of these annotations".
-  options.compilerArgs << '-Xlint:all,-processing' << '-Werror'
+  // "-options" is because starting in JDK 20, javac warns about using -source 8.
+  options.compilerArgs << '-Xlint:all,-processing,-options' << '-Werror'
   options.errorprone {
     enabled = JavaVersion.current() != JavaVersion.VERSION_1_8
     // Recommends @InlineMe, which isn't in the error_prone_annotations jar file.  An `implementation`
@@ -91,6 +95,7 @@ tasks.withType(JavaCompile).configureEach {
     excludedPaths = '.*/Weak.*Hash(er)?Map.java'
   }
   options.forkOptions.jvmArgs += '-Xmx2g'
+  options.release = 8
 }
 
 /// Checker Framework pluggable type-checking
@@ -121,22 +126,26 @@ checkerFramework {
   ]
   extraJavacArgs = [
     '-Werror',
+    // '-Aversion',
+    // '-verbose',
     '-AcheckPurityAnnotations',
     '-ArequirePrefixInWarningSuppressions',
+    '-AwarnRedundantAnnotations',
     '-AwarnUnneededSuppressions',
     '-AnoJreVersionCheck',
   ]
 }
 // To use a snapshot version of the Checker Framework.
-if (false) {
-  repositories {
-    maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
-  }
-  ext.checkerFrameworkVersion = '3.30.0'
+if (true) {
+  // TODO: change the above test to false when CF 3.34.0 is released
+  ext.checkerFrameworkVersion = '3.33.1-SNAPSHOT'
   dependencies {
     compileOnly "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
     testCompileOnly "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
     checkerFramework "org.checkerframework:checker:${checkerFrameworkVersion}"
+  }
+  configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 0, 'minutes'
   }
 }
 // To use a locally-built Checker Framework, run gradle with "-PcfLocal".
