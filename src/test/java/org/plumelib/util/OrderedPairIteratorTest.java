@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.common.value.qual.ArrayLen;
 import org.junit.jupiter.api.Test;
 
+/** Test the OrderedPairIterator class. */
 @SuppressWarnings({
   "UseCorrectAssertInTests" // `assert` works fine in tests
 })
@@ -178,8 +179,9 @@ public final class OrderedPairIteratorTest {
    * @throws AssertionError iff the iterator returns the same values as the argument array contains
    */
   @SuppressWarnings(
-      "index:array.access.unsafe.high.range") // same length iterator and array, and while loop with
-  // ++ on index
+      "index:array.access.unsafe.high" // same length iterator and array, and while loop with ++ on
+  // index
+  )
   public static void compareOrderedPairIterator(
       OrderedPairIterator<Integer> opi, int[] @ArrayLen(2) [] ints) {
     int pairno = 0;

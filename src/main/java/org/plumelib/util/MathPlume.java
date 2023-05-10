@@ -1,6 +1,5 @@
 package org.plumelib.util;
 
-import com.google.errorprone.annotations.InlineMe;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -802,7 +801,7 @@ public final class MathPlume {
    * @deprecated use {@link #modNonnegative(int, int)}
    */
   @Deprecated // 2020-02-20
-  @InlineMe(replacement = "MathPlume.modNonnegative(x, y)", imports = "org.plumelib.util.MathPlume")
+  // @InlineMe(replacement="MathPlume.modNonnegative(x, y)", imports="org.plumelib.util.MathPlume")
   @Pure
   @StaticallyExecutable
   public static @NonNegative @LessThan("#2") @PolyUpperBound int modPositive(
@@ -1042,7 +1041,7 @@ public final class MathPlume {
    * @deprecated use {@link #modNonnegative(long, long)}
    */
   @Deprecated // 2020-02-20
-  @InlineMe(replacement = "MathPlume.modNonnegative(x, y)", imports = "org.plumelib.util.MathPlume")
+  // @InlineMe(replacement="MathPlume.modNonnegative(x, y)", imports="org.plumelib.util.MathPlume")
   @Pure
   @StaticallyExecutable
   public static @NonNegative @LessThan("#2") @PolyUpperBound long modPositive(
@@ -1377,7 +1376,6 @@ public final class MathPlume {
         currentMissing = currentNonmissing;
       }
       this.numsItor = numsItor;
-      @SuppressWarnings("lowerbound:assignment") // unused variable, so value doesn't matter
       @IndexFor("nums") int unused = Integer.MIN_VALUE;
       currentIndex = unused;
     }
@@ -1398,8 +1396,8 @@ public final class MathPlume {
               "index:assignment" // This breaks the invariant, but it's checked right below and the
           // function exits.
           )
-          @IndexFor("nums") int currentIndex_temp = currentIndex + 1;
-          currentIndex = currentIndex_temp;
+          @IndexFor("nums") int currentIndexTmp = currentIndex + 1;
+          currentIndex = currentIndexTmp;
           if (currentIndex >= nums.length) {
             if (addEnds) {
               currentMissing++;
@@ -1711,7 +1709,6 @@ public final class MathPlume {
         currentMissing = currentNonmissing;
       }
       this.numsItor = numsItor;
-      @SuppressWarnings("lowerbound:assignment") // unused variable, so value doesn't matter
       @IndexFor("nums") int unused = Integer.MIN_VALUE;
       currentIndex = unused;
     }
@@ -1732,8 +1729,8 @@ public final class MathPlume {
               "index:assignment" // This breaks the invariant, but it's checked right below and the
           // function exits.
           )
-          @IndexFor("nums") int currentIndex_temp = currentIndex + 1;
-          currentIndex = currentIndex_temp;
+          @IndexFor("nums") int currentIndexTmp = currentIndex + 1;
+          currentIndex = currentIndexTmp;
           if (currentIndex >= nums.length) {
             if (addEnds) {
               currentMissing++;

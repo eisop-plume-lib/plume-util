@@ -1,5 +1,33 @@
 # Plume-Util change log
 
+## 1.6.6 (??)
+
+- In `ArraySet`:
+   * new method `ArraySet.sort`.
+   * widened the formal parameter type of `newArraySetOrHashSet` and `newArraySetOrLinkedHashSet`.
+- New methodsin `CollectionsPlume`:
+   * `sortedSetContainsAll`, `sortedSetEquals`, and `withoutDuplicatesSorted`.
+   * `deepCopy(List)`, `deepCopy(TreeSet)`, `deepCopy(Map)`, and `deepCopyValues(Map)`.
+- New method `UtilPlume.clone(Object)`.
+
+## 1.6.5 (2022-01-08)
+
+- New methods `newArrayMapOrHashMap`, `newArrayMapOrLinkedHashMap`,
+  `newArraySetOrHashSet`, and `newArraySetOrLinkedHashSet`.
+- Bug fixes in collection methods.
+
+## 1.6.2 (2022-01-07)
+
+- New method `StringsPlume.isBlank()`.
+- Don't use `@InlineMe`, which breaks javac in some clients.
+
+## 1.6.1 (2022-01-06)
+
+- New methods in `CollectionsPlume`: `adjoin`, `adjoinAll`, `listUnion`, `listIntersection`.
+- New classes `ArraySet` and `IdentityArraySet` for very small sets.
+- New classes `MostlySingletonSet`, `AbstractMostlySingletonSet`, and `IdentityMostlySingletonSet`.
+- New class `UnmodifiableIdentityHashMap`.
+
 ## 1.6.0 (2022-10-17)
 
 - New class `ArrayMap` is an efficient representation for very small maps.

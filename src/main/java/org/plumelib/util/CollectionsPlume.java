@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -20,6 +21,7 @@ import java.util.Objects;
 import java.util.Random;
 import java.util.RandomAccess;
 import java.util.Set;
+import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -31,6 +33,7 @@ import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.dataflow.qual.Pure;
@@ -110,7 +113,8 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Returns a copy of the list with duplicates removed. Retains the original order.
+   * Returns a copy of the list (never the original list) with duplicates removed, but retaining the
+   * original order.
    *
    * @param <T> type of elements of the list
    * @param l a list to remove duplicates from
@@ -125,32 +129,62 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Returns a copy of the list with duplicates removed. Retains the original order. May return its
-   * argument if its argument has no duplicates, but is not guaranteed to do so.
+   * Returns a copy of the list with duplicates removed, but retaining the original order. May
+   * return its argument if its argument has no duplicates, but is not guaranteed to do so. The
+   * argument is not modified.
    *
-   * <p>If the element type implements {@link Comparable}, use {@link #withoutDuplicatesComparable}.
+   * <p>If the element type implements {@link Comparable}, use {@link #withoutDuplicatesSorted} or
+   * {@link #withoutDuplicatesComparable}.
    *
    * @param <T> the type of elements in {@code values}
    * @param values a list of values
    * @return the values, with duplicates removed
    */
   public static <T> List<T> withoutDuplicates(List<T> values) {
-    HashSet<T> hs = new LinkedHashSet<>(values);
-    if (values.size() == hs.size()) {
+    Set<T> s = ArraySet.newArraySetOrLinkedHashSet(values);
+    if (values.size() == s.size()) {
       return values;
     } else {
-      return new ArrayList<>(hs);
+      return new ArrayList<>(s);
     }
   }
 
   /**
-   * Returns a list with the same contents as its argument, but without duplicates. May return its
-   * argument if its argument has no duplicates, but is not guaranteed to do so.
+   * Returns a list with the same contents as its argument, but sorted and without duplicates. May
+   * return its argument if its argument is sorted and has no duplicates, but is not guaranteed to
+   * do so. The argument is not modified.
    *
    * <p>This is like {@link #withoutDuplicates}, but requires the list elements to implement {@link
-   * Comparable}, and thus can be more efficient. Also, this does not retain the original order; the
-   * result is sorted.
+   * Comparable}, and thus can be more efficient.
    *
+   * @see #withoutDuplicatesComparable
+   * @param <T> the type of elements in {@code values}
+   * @param values a list of values
+   * @return the values, with duplicates removed
+   */
+  public static <T extends Comparable<T>> List<T> withoutDuplicatesSorted(List<T> values) {
+    // This adds O(n) time cost, and has the benefit of sometimes avoiding allocating a TreeSet.
+    if (isSortedNoDuplicates(values)) {
+      return values;
+    }
+
+    Set<T> set = new TreeSet<>(values);
+    return new ArrayList<>(set);
+  }
+
+  /**
+   * Returns a list with the same contents as its argument, but without duplicates. May return its
+   * argument if its argument has no duplicates, but is not guaranteed to do so. The argument is not
+   * modified.
+   *
+   * <p>This is like {@link #withoutDuplicatesSorted}, but it is not guaranteed to return a sorted
+   * list. Thus, it is occasionally more efficient.
+   *
+   * <p>This is like {@link #withoutDuplicates}, but requires the list elements to implement {@link
+   * Comparable}, and thus can be more efficient. If a new list is returned, this does not retain
+   * the original order; the result is sorted.
+   *
+   * @see #withoutDuplicatesSorted
    * @param <T> the type of elements in {@code values}
    * @param values a list of values
    * @return the values, with duplicates removed
@@ -212,7 +246,7 @@ public final class CollectionsPlume {
    * @return true if the list is sorted and has no duplicates
    */
   public static <T extends Comparable<T>> boolean isSortedNoDuplicates(List<T> values) {
-    if (values.isEmpty() || values.size() == 1) {
+    if (values.size() < 2) {
       return true;
     }
 
@@ -435,6 +469,113 @@ public final class CollectionsPlume {
   }
 
   ///////////////////////////////////////////////////////////////////////////
+  /// SortedSet
+  ///
+
+  /**
+   * Returns true if the two sets contain the same elements in the same order. This is faster than
+   * regular {@code equals()}, for sets with the same ordering operator, especially for sets that
+   * are not extremely small.
+   *
+   * @param <T> the type of elements in the sets
+   * @param set1 the first set to compare
+   * @param set2 the first set to compare
+   * @return true if the two sets contain the same elements in the same order
+   */
+  public static <T> boolean sortedSetEquals(SortedSet<T> set1, SortedSet<T> set2) {
+    @SuppressWarnings("interning:not.interned")
+    boolean sameObject = set1 == set2;
+    if (sameObject) {
+      return true;
+    }
+    if (set1.size() != set2.size()) {
+      return false;
+    }
+    Comparator<? super T> comparator1 = set1.comparator();
+    Comparator<? super T> comparator2 = set2.comparator();
+    if (!Objects.equals(comparator1, comparator2)) {
+      // Fall back to regular `equals`.
+      return set1.equals(set2);
+    }
+    for (Iterator<T> itor1 = set1.iterator(), itor2 = set2.iterator(); itor1.hasNext(); ) {
+      if (!Objects.equals(itor1.next(), itor2.next())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Returns true if the two sets contain the same elements in the same order. This is faster than
+   * regular {@code containsAll()}, for sets with the same ordering operator, especially for sets
+   * that are not extremely small.
+   *
+   * @param <T> the type of elements in the sets
+   * @param set1 the first set to compare
+   * @param set2 the first set to compare
+   * @return true if the first set contains all the elements of the second set
+   */
+  public static <T> boolean sortedSetContainsAll(SortedSet<T> set1, SortedSet<T> set2) {
+    @SuppressWarnings("interning:not.interned")
+    boolean sameObject = set1 == set2;
+    if (sameObject) {
+      return true;
+    }
+    if (set1.size() < set2.size()) {
+      return false;
+    }
+    Comparator<? super T> comparator1 = set1.comparator();
+    Comparator<? super T> comparator2 = set2.comparator();
+    if (!Objects.equals(comparator1, comparator2)) {
+      // Fall back to regular `containsAll`.
+      return set1.containsAll(set2);
+    }
+    if (comparator1 == null) {
+      outerloopNaturalOrder:
+      for (Iterator<T> itor1 = set1.iterator(), itor2 = set2.iterator(); itor2.hasNext(); ) {
+        T elt2 = itor2.next();
+        if (elt2 == null) {
+          throw new IllegalArgumentException("null element in set 2: " + set2);
+        }
+        while (itor1.hasNext()) {
+          T elt1 = itor1.next();
+          if (elt2 == null) {
+            throw new IllegalArgumentException("null element in set 2: " + set2);
+          }
+          @SuppressWarnings({
+            "unchecked", // Java warning about generic cast
+            "nullness:dereference", // next() has side effects, so elt1 isn't know to be non-null
+            "signedness:method.invocation" // generics problem; #979?
+          })
+          int comparison = ((Comparable<T>) elt1).compareTo(elt2);
+          if (comparison == 0) {
+            continue outerloopNaturalOrder;
+          } else if (comparison < 0) {
+            return false;
+          }
+        }
+        return false;
+      }
+    } else {
+      outerloopComparator:
+      for (Iterator<T> itor1 = set1.iterator(), itor2 = set2.iterator(); itor2.hasNext(); ) {
+        T elt2 = itor2.next();
+        while (itor1.hasNext()) {
+          T elt1 = itor1.next();
+          int comparison = comparator1.compare(elt1, elt2);
+          if (comparison == 0) {
+            continue outerloopComparator;
+          } else if (comparison < 0) {
+            return false;
+          }
+        }
+        return false;
+      }
+    }
+    return true;
+  }
+
+  ///////////////////////////////////////////////////////////////////////////
   /// ArrayList
   ///
 
@@ -638,6 +779,46 @@ public final class CollectionsPlume {
     }
 
     return results;
+  }
+
+  /**
+   * Returns a copy of {@code orig}, where each element of the result is a clone of the
+   * corresponding element of {@code orig}.
+   *
+   * @param <T> the type of elements of the list
+   * @param orig a list
+   * @return a deep copy of {@code orig}
+   */
+  @SuppressWarnings("signedness") // problem with UtilPlume.clone()
+  public static <@Nullable T> @PolyNull List<T> deepCopy(@PolyNull List<T> orig) {
+    if (orig == null) {
+      return null;
+    }
+    List<T> result = new ArrayList<>(orig.size());
+    for (T elt : orig) {
+      result.add(UtilPlume.clone(elt));
+    }
+    return result;
+  }
+
+  /**
+   * Returns a copy of {@code orig}, where each element of the result is a clone of the
+   * corresponding element of {@code orig}.
+   *
+   * @param <T> the type of elements of the list
+   * @param orig a list
+   * @return a deep copy of {@code orig}
+   */
+  @SuppressWarnings("signedness") // problem with UtilPlume.clone()
+  public static <@Nullable T> @PolyNull TreeSet<T> deepCopy(@PolyNull TreeSet<T> orig) {
+    if (orig == null) {
+      return null;
+    }
+    TreeSet<T> result = new TreeSet<>(orig.comparator());
+    for (T elt : orig) {
+      result.add(UtilPlume.clone(elt));
+    }
+    return result;
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1172,7 +1353,7 @@ public final class CollectionsPlume {
    */
   public static int mapCapacity(int numElements) {
     // Equivalent to: (int) (numElements / 0.75) + 1
-    // where 0.75 is the default load factor.
+    // where 0.75 is the default load factor used throughout the JDK.
     return (numElements * 4 / 3) + 1;
   }
 
@@ -1198,17 +1379,60 @@ public final class CollectionsPlume {
     return mapCapacity(m.size());
   }
 
+  /**
+   * Returns a copy of {@code orig}, where each element of the result is a clone of the
+   * corresponding element of {@code orig}.
+   *
+   * @param <K> the type of keys of the map
+   * @param <V> the type of values of the map
+   * @param orig a map
+   * @return a deep copy of {@code orig}
+   */
+  @SuppressWarnings({"nullness", "signedness"}) // generics problem with UtilPlume.clone
+  public static <K, V> @PolyNull Map<K, V> deepCopy(@PolyNull Map<K, V> orig) {
+    if (orig == null) {
+      return null;
+    }
+    Map<K, V> result = new HashMap<>(orig.size());
+    for (Map.Entry<K, V> mapEntry : orig.entrySet()) {
+      result.put(UtilPlume.clone(mapEntry.getKey()), UtilPlume.clone(mapEntry.getValue()));
+    }
+    return result;
+  }
+
+  /**
+   * Returns a copy of {@code orig}, where each value of the result is a clone of the corresponding
+   * value of {@code orig}, but the keys are the same objects.
+   *
+   * @param <K> the type of keys of the map
+   * @param <V> the type of values of the map
+   * @param orig a map
+   * @return a deep copy of {@code orig}
+   */
+  @SuppressWarnings({"nullness", "signedness"}) // generics problem with UtilPlume.clone
+  public static <K, V> @PolyNull Map<K, V> deepCopyValues(@PolyNull Map<K, V> orig) {
+    if (orig == null) {
+      return null;
+    }
+    Map<K, V> result = new HashMap<>(orig.size());
+    for (Map.Entry<K, V> mapEntry : orig.entrySet()) {
+      result.put(mapEntry.getKey(), UtilPlume.clone(mapEntry.getValue()));
+    }
+    return result;
+  }
+
   ///////////////////////////////////////////////////////////////////////////
   /// Set
   ///
 
   /**
-   * Returns the object in this set that is equal to key. The Set abstraction doesn't provide this;
-   * it only provides "contains". Returns null if the argument is null, or if it isn't in the set.
+   * Returns the object in the given set that is equal to key. The Set abstraction doesn't provide
+   * this; it only provides "contains". Returns null if the argument is null, or if it isn't in the
+   * set.
    *
    * @param set a set in which to look up the value
    * @param key the value to look up in the set
-   * @return the object in this set that is equal to key, or null
+   * @return the object in the given set that is equal to key, or null
    */
   public static @Nullable Object getFromSet(Set<? extends @Nullable Object> set, Object key) {
     if (key == null) {
@@ -1220,6 +1444,82 @@ public final class CollectionsPlume {
       }
     }
     return null;
+  }
+
+  /**
+   * Adds an element to the given collection, but only if it is not already present.
+   *
+   * @param <T> the type of the collection elements
+   * @param c a collection to be added to; is side-effected by this method
+   * @param e an element to add to the collection
+   * @return true if the collection c changed (that is, if an element was added)
+   */
+  @SuppressWarnings("nullness:argument") // c might forbid null
+  public static <T> boolean adjoin(Collection<T> c, T e) {
+    if (!c.contains(e)) {
+      c.add(e);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Adds elements to the given collection, but only ones that are not already present.
+   *
+   * <p>This method could alternately be named "union".
+   *
+   * @param <T> the type of the collection elements
+   * @param c a collection to be added to; is side-effected by this method
+   * @param toAdd elements to add to the collection, if they are not already present
+   * @return true if the collection c changed (that is, if an element was added)
+   */
+  @SuppressWarnings("nullness:argument") // c might forbid null
+  public static <T> boolean adjoinAll(Collection<T> c, Collection<? extends T> toAdd) {
+    boolean result = false;
+    for (T e : toAdd) {
+      if (!c.contains(e)) {
+        c.add(e);
+        result = true;
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Returns a new list that is the union of the given collections. The given lists should be small,
+   * since the cost of this method is O(c1.size() * c2.size()). For small lists, this is more
+   * efficient than creating and using a Set.
+   *
+   * @param <T> the type of the collection elements
+   * @param c1 the first collection
+   * @param c2 the second collection
+   * @return a duplicate-free list that is the union of the given collections
+   */
+  public static <T> List<T> listUnion(Collection<T> c1, Collection<T> c2) {
+    // TODO: use a set if the collection sizes are big enough, to avoid quadratic time complexity.
+    List<T> result = new ArrayList<>(c1.size() + c2.size());
+    adjoinAll(result, c1);
+    adjoinAll(result, c2);
+    return result;
+  }
+
+  /**
+   * Returns a new list that is the intersection of the given collections. The given lists should be
+   * small, since the cost of this method is O(c1.size() * c2.size()). For small lists, this is more
+   * efficient than creating and using a Set.
+   *
+   * @param <T> the type of the collection elements
+   * @param c1 the first collection
+   * @param c2 the second collection
+   * @return a duplicate-free list that is the union of the given collections
+   */
+  public static <T> List<T> listIntersection(Collection<T> c1, Collection<T> c2) {
+    // TODO: use a set if the collection sizes are big enough, to avoid quadratic time complexity.
+    List<T> result = new ArrayList<>(c1.size());
+    adjoinAll(result, c1);
+    result.retainAll(c2);
+    return result;
   }
 
   ///////////////////////////////////////////////////////////////////////////
