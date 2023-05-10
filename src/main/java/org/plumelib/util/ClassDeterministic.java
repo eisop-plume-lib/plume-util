@@ -6,6 +6,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Comparator;
+import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -68,7 +69,8 @@ public class ClassDeterministic {
   }
 
   /**
-   * Like {@link Class#getEnumConstants()}, but returns the methods in deterministic order.
+   * Like {@link Class#getEnumConstants()}, but returns the methods in deterministic order. Returns
+   * null if the argument is not an enum class.
    *
    * @param <T> the class's type parameter
    * @param c the Class whose enum constants to return
@@ -78,7 +80,7 @@ public class ClassDeterministic {
     "signedness", // ToStringComparator problem
     "mustcall:argument" // not sure; generics inference problem?
   })
-  public static <T> T @Nullable [] getEnumConstants(Class<T> c) {
+  public static <@Interned T> T @Nullable [] getEnumConstants(Class<T> c) {
     @NonNull T[] result = c.getEnumConstants();
     if (result == null) {
       return null;
