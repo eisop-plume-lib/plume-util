@@ -102,12 +102,6 @@ tasks.withType(JavaCompile).configureEach {
 
 apply plugin: 'org.checkerframework'
 
-dependencies {
-  compileOnly 'io.github.eisop:checker-qual:3.34.0-eisop1'
-  testCompileOnly 'io.github.eisop:checker-qual:3.34.0-eisop1'
-  checkerFramework 'io.github.eisop:checker:3.34.0-eisop1'
-}
-
 checkerFramework {
   checkers = [
     // No need to run CalledMethodsChecker, because ResourceLeakChecker does so.
@@ -135,14 +129,22 @@ checkerFramework {
     '-AnoJreVersionCheck',
   ]
 }
+
+dependencies {
+  ext.checkerFrameworkVersion = '3.34.0-eisop1'
+  compileOnly "io.github.eisop:checker-qual::${checkerFrameworkVersion}"
+  testCompileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
+  checkerFramework "io.github.eisop:checker:${checkerFrameworkVersion}"
+}
+
 // To use a snapshot version of the Checker Framework.
-if (true) {
+if (false) {
   // TODO: change the above test to false when CF 3.34.0 is released
-  ext.checkerFrameworkVersion = '3.33.1-SNAPSHOT'
+  ext.checkerFrameworkVersion = '3.34.0-eisop2-SNAPSHOT'
   dependencies {
-    compileOnly "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
-    testCompileOnly "org.checkerframework:checker-qual:${checkerFrameworkVersion}"
-    checkerFramework "org.checkerframework:checker:${checkerFrameworkVersion}"
+    compileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
+    testCompileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
+    checkerFramework "io.github.eisop:checker:${checkerFrameworkVersion}"
   }
   configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'minutes'
