@@ -206,7 +206,9 @@ public class UnmodifiableIdentityHashMap<K, V> extends IdentityHashMap<K, V> {
 
   @Override
   public @PolyNull V merge(
-      K key, @NonNull V value, BiFunction<? super @NonNull V, ? super @NonNull V, ? extends @PolyNull V> remappingFunction) {
+      K key,
+      @NonNull V value,
+      BiFunction<? super @NonNull V, ? super @NonNull V, ? extends @PolyNull V> remappingFunction) {
     throw new UnsupportedOperationException();
   }
 }
