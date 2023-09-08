@@ -937,7 +937,10 @@ public final class FilesPlume {
    * @throws IOException if there is trouble reading the file
    * @throws ClassNotFoundException if the object's class cannot be found
    */
-  @SuppressWarnings("BanSerializableRead") // wrapper around dangerous API
+  @SuppressWarnings({
+    "BanSerializableRead", // wrapper around dangerous API
+    "nullness", // TODO: readObject might return null, return type should be @Nullable
+  })
   public static Object readObject(File file) throws IOException, ClassNotFoundException {
     try (InputStream fis = newFileInputStream(file);
         // 8192 is the buffer size in BufferedReader
