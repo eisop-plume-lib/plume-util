@@ -81,10 +81,13 @@ public class ArrayMap<K extends @UnknownSignedness Object, V extends @UnknownSig
 
   /** The keys. Null if capacity=0. */
   private @Nullable K @SameLen("values") [] keys;
+
   /** The values. Null if capacity=0. */
   private @Nullable V @SameLen("keys") [] values;
+
   /** The number of used mappings in the representation of this. */
   private @NonNegative @LessThan("keys.length + 1") @IndexOrHigh({"keys", "values"}) int size = 0;
+
   // An alternate representation would also store the hash code of each key, for quicker querying.
 
   /**
@@ -105,7 +108,6 @@ public class ArrayMap<K extends @UnknownSignedness Object, V extends @UnknownSig
   @SuppressWarnings({
     "unchecked", // generic array cast
     "samelen:assignment", // initialization
-    "allcheckers:purity.not.sideeffectfree.assign.field" // initializes `this`
   })
   @SideEffectFree
   public ArrayMap(int initialCapacity) {
@@ -134,10 +136,7 @@ public class ArrayMap<K extends @UnknownSignedness Object, V extends @UnknownSig
    * @param values the values
    * @param size the number of used items in the arrays; may be less than their lengths
    */
-  @SuppressWarnings({
-    "samelen:assignment", // initialization
-    "allcheckers:purity.not.sideeffectfree.assign.field" // initializes `this`
-  })
+  @SuppressWarnings("samelen:assignment") // initialization
   @SideEffectFree
   private ArrayMap(
       K @SameLen("values") [] keys,
@@ -696,13 +695,14 @@ public class ArrayMap<K extends @UnknownSignedness Object, V extends @UnknownSig
   abstract class ArrayMapIterator {
     /** The first unread index; the index of the next value to return. */
     @NonNegative int index;
+
     /** True if remove() has been called since the last call to next(). */
     boolean removed;
+
     /** The modification count when the iterator is created, for fail-fast. */
     int initialSizeModificationCount;
 
     /** Creates a new ArrayMapIterator. */
-    @SuppressWarnings("allcheckers:purity") // initializes `this`
     @SideEffectFree
     ArrayMapIterator() {
       index = 0;
@@ -872,9 +872,10 @@ public class ArrayMap<K extends @UnknownSignedness Object, V extends @UnknownSig
       return false;
     }
 
+    @SuppressWarnings("signedness:override.receiver") // temporary
     @Pure
     @Override
-    public int hashCode() {
+    public int hashCode(ArrayMap<K, V>.Entry this) {
       return Objects.hash(getKey(), getValue());
     }
   }
