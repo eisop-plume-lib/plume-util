@@ -12,6 +12,8 @@ import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.lock.qual.GuardSatisfied;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
+import org.checkerframework.checker.signedness.qual.Signed;
+import org.checkerframework.checker.signedness.qual.UnknownSignedness;
 import org.checkerframework.common.value.qual.PolyValue;
 import org.checkerframework.dataflow.qual.Pure;
 import org.checkerframework.dataflow.qual.SideEffectFree;
@@ -125,8 +127,9 @@ public final class Intern {
     }
 
     @Override
-    public int hashCode(Object o) {
-      Integer i = (Integer) o;
+    public int hashCode(@UnknownSignedness Object o) {
+      @SuppressWarnings("signedness:cast.unsafe") // Signedness doesn't matter for hashCode().
+      Integer i = (@Signed Integer) o;
       return i.intValue();
     }
   }
@@ -147,8 +150,9 @@ public final class Intern {
     }
 
     @Override
-    public int hashCode(Object o) {
-      Long i = (Long) o;
+    public int hashCode(@UnknownSignedness Object o) {
+      @SuppressWarnings("signedness:cast.unsafe") // Signedness doesn't matter for hashCode().
+      Long i = (@Signed Long) o;
       return i.intValue();
     }
   }
@@ -169,7 +173,7 @@ public final class Intern {
     }
 
     @Override
-    public int hashCode(Object o) {
+    public int hashCode(@UnknownSignedness Object o) {
       return Arrays.hashCode((int[]) o);
     }
   }
@@ -190,13 +194,14 @@ public final class Intern {
     }
 
     @Override
-    public int hashCode(Object o) {
+    public int hashCode(@UnknownSignedness Object o) {
       return Arrays.hashCode((long[]) o);
     }
   }
 
   /** Multiplicative constant for use in hashing function. */
   private static final int FACTOR = 23;
+
   /** Another multiplicative constant for use in hashing function. */
   private static final double DOUBLE_FACTOR = 263;
 
@@ -215,7 +220,7 @@ public final class Intern {
     }
 
     @Override
-    public int hashCode(Object o) {
+    public int hashCode(@UnknownSignedness Object o) {
       Double d = (Double) o;
       return d.hashCode();
     }
@@ -250,7 +255,7 @@ public final class Intern {
     }
 
     @Override
-    public int hashCode(Object o) {
+    public int hashCode(@UnknownSignedness Object o) {
       double[] a = (double[]) o;
       // Not Arrays.hashCode(a), for consistency with equals method
       // immediately above.
@@ -281,7 +286,7 @@ public final class Intern {
     }
 
     @Override
-    public int hashCode(Object o) {
+    public int hashCode(@UnknownSignedness Object o) {
       return Arrays.hashCode((String[]) o);
     }
   }
@@ -302,7 +307,7 @@ public final class Intern {
     }
 
     @Override
-    public int hashCode(Object o) {
+    public int hashCode(@UnknownSignedness Object o) {
       return Arrays.hashCode((Object[]) o);
     }
   }
@@ -316,46 +321,60 @@ public final class Intern {
   /** All the interned Integers. */
   private static WeakHasherMap<@Interned Integer, WeakReference<@Interned Integer>>
       internedIntegers;
+
   /** All the interned Longs. */
   private static WeakHasherMap<@Interned Long, WeakReference<@Interned Long>> internedLongs;
+
   /** All the interned Int arrays. */
   private static WeakHasherMap<int @Interned [], WeakReference<int @Interned []>> internedIntArrays;
+
   /** All the interned Long arrays. */
   private static WeakHasherMap<long @Interned [], WeakReference<long @Interned []>>
       internedLongArrays;
+
   /** All the interned Doubles. */
   private static WeakHasherMap<@Interned Double, WeakReference<@Interned Double>> internedDoubles;
+
   /** The interned NaN. */
   private static @Interned Double internedDoubleNaN;
+
   /** The interned Double zero. */
   private static @Interned Double internedDoubleZero;
+
   /** All the interned Double arrays. */
   private static WeakHasherMap<double @Interned [], WeakReference<double @Interned []>>
       internedDoubleArrays;
+
   /** All the interned String arrays. */
   private static WeakHasherMap<
           @Nullable @Interned String @Interned [],
           WeakReference<@Nullable @Interned String @Interned []>>
       internedStringArrays;
+
   /** All the interned Object arrays. */
   private static WeakHasherMap<
           @Nullable @Interned Object @Interned [],
           WeakReference<@Nullable @Interned Object @Interned []>>
       internedObjectArrays;
+
   /** All the interned Int subsequences. */
   private static WeakHasherMap<Subsequence<int @Interned []>, WeakReference<int @Interned []>>
       internedIntSubsequence;
+
   /** All the interned Long subsequences. */
   private static WeakHasherMap<Subsequence<long @Interned []>, WeakReference<long @Interned []>>
       internedLongSubsequence;
+
   /** All the interned Double subsequences. */
   private static WeakHasherMap<Subsequence<double @Interned []>, WeakReference<double @Interned []>>
       internedDoubleSubsequence;
+
   /** All the interned Object subsequences. */
   private static WeakHasherMap<
           Subsequence<@Nullable @Interned Object @Interned []>,
           WeakReference<@Nullable @Interned Object @Interned []>>
       internedObjectSubsequence;
+
   /** All the interned String subsequences. */
   private static WeakHasherMap<
           Subsequence<@Nullable @Interned String @Interned []>,
@@ -1110,8 +1129,10 @@ public final class Intern {
   private static final class Subsequence<T extends @Interned Object> {
     /** The full sequence. The Subsequence object represents part of this sequence. */
     public T seq;
+
     /** The start index, inclusive. */
     public @NonNegative int start;
+
     // TODO: inclusive or exclusive?
     /** The end index. */
     public int end;
@@ -1158,6 +1179,7 @@ public final class Intern {
       return ((this.seq == other.seq) && this.start == other.start && this.end == other.end);
     }
 
+    @SuppressWarnings("signedness:override.receiver") // temporary
     @Pure
     @Override
     public int hashCode(@GuardSatisfied Subsequence<T> this) {
@@ -1193,7 +1215,7 @@ public final class Intern {
     }
 
     @Override
-    public int hashCode(Object o) {
+    public int hashCode(@UnknownSignedness Object o) {
       return o.hashCode();
     }
   }

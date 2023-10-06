@@ -1,16 +1,40 @@
 # Plume-Util change log
 
-## 1.6.6 (??)
+## 1.8.1 (2023-06-02)
 
+- `CollectionsPlume`: remove conflicting overrides of `deepCopy()`
+- `IPair` and `MPair`: rename fields from `a` and `b` to `first` and `second`
+- `MPair`: new methods `cloneElements()`, `deepCopy()`, `deepCopyFirst()`, `deepCopySecond()`
+
+## 1.8.0 (2023-06-02)
+
+- Deprecated `Pair` class for mutable pairs; use `MPair` instead.
+  `OrderedPairIterator` uses `MPair` instead of `Pair`.
+- New class `IPair` for immutable pairs.
+- The `WeakIdentityPair` constructor is deprecated in favor of the `of()` method.
+- New interface `DeepCopyable`.
+- New methods in `UtilPlume`:
+   * `firstNonNull()`
+- New methods in `CollectionsPlume`:
+   * for `Collection`s: `cloneElements()`, `deepCopy()`
+   * for `Map`s: `cloneElements()`, `cloneValues()`, `createLruCache()`
+
+## 1.7.0 (2023-05-10)
+
+- Moved classes `Hasher`, `WeakHasherMap`, and `WeakIdentityHashMap`
+  to a new project, hashmap-util.  It is available on Maven Central.
 - In `ArraySet`:
    * new method `ArraySet.sort`.
    * widened the formal parameter type of `newArraySetOrHashSet` and `newArraySetOrLinkedHashSet`.
-- New methodsin `CollectionsPlume`:
+- New methods in `CollectionsPlume`:
    * `sortedSetContainsAll`, `sortedSetEquals`, and `withoutDuplicatesSorted`.
    * `deepCopy(List)`, `deepCopy(TreeSet)`, `deepCopy(Map)`, and `deepCopyValues(Map)`.
 - New method `UtilPlume.clone(Object)`.
+- New method `StringsPlume.toStringTruncated(Object, int)`.
+- In `ArraysPlume`, the generic signatures of `isSubarrayEq` and `indexOfEq`
+  have changed.  Let us know if this causes a problem.
 
-## 1.6.5 (2022-01-08)
+## 1.6.5 (2023-01-08)
 
 - New methods `newArrayMapOrHashMap`, `newArrayMapOrLinkedHashMap`,
   `newArraySetOrHashSet`, and `newArraySetOrLinkedHashSet`.

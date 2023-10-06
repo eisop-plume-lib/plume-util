@@ -28,6 +28,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Properties;
@@ -77,6 +78,25 @@ public final class UtilPlume {
       return (T) data.getClass().getMethod("clone").invoke(data);
     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
       throw new Error(e);
+    }
+  }
+
+  /**
+   * Return the first argument if it is non-null, otherwise return the second argument. Throws an
+   * exception if both arguments are null.
+   *
+   * @param <T> the type of the arguments
+   * @param first a reference
+   * @param second a reference
+   * @return the first argument that is non-null
+   */
+  public static <T> T firstNonNull(T first, T second) {
+    if (first != null) {
+      return first;
+    } else if (second != null) {
+      return second;
+    } else {
+      throw new NullPointerException();
     }
   }
 
@@ -728,6 +748,7 @@ public final class UtilPlume {
   public static final class WildcardFilter implements FilenameFilter {
     /** The text before the wildcard. */
     String prefix;
+
     /** The text after the wildcard. */
     String suffix;
 
@@ -1215,7 +1236,7 @@ public final class UtilPlume {
     if (pvalue == null) {
       return defaultValue;
     }
-    switch (pvalue.toLowerCase()) {
+    switch (pvalue.toLowerCase(Locale.getDefault())) {
       case "true":
       case "yes":
       case "1":
