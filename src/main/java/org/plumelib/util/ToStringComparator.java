@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import org.checkerframework.checker.mustcall.qual.MustCallUnknown;
 
 /**
  * A comparator that orders values based on the lexicographic ordering of their toString().
@@ -21,7 +22,7 @@ public class ToStringComparator implements Comparator<Object> {
   private ToStringComparator() {}
 
   @Override
-  public int compare(Object o1, Object o2) {
+  public int compare(@MustCallUnknown Object o1, @MustCallUnknown Object o2) {
     return Objects.toString(o1).compareTo(Objects.toString(o2));
   }
 
@@ -34,8 +35,7 @@ public class ToStringComparator implements Comparator<Object> {
    */
   @SuppressWarnings({
     "signedness:argument", // temporary
-    "nullness:argument", // Comparator should be @Contravariant.
-    "mustcall:argument" // not sure; Java generics inference?
+    "nullness:argument" // Comparator should be @Contravariant.
   })
   public static <T> List<T> sorted(Iterable<T> in) {
     List<T> result = new ArrayList<T>();
