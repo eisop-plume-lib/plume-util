@@ -1489,7 +1489,8 @@ public final class UtilPlume {
    *
    * <p>Consider using the built-in <a
    * href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html#split(java.lang.String)">String.split</a>
-   * method, which takes a regular expression whereas this method takes a string.
+   * method, which takes a regular expression whereas this method takes a a character that is
+   * interpreted literally.
    *
    * @see #split(String s, String delim)
    * @param s the string to split
@@ -1499,7 +1500,7 @@ public final class UtilPlume {
    */
   @Deprecated // use String.split; deprecated 2020-12-02
   // @InlineMe(replacement = "s.split(\"\\\\\" + delim)")
-  @SuppressWarnings("regex:argument") // todo: "\\" + char is a regex
+  @SuppressWarnings("regex:argument") // "\\" + char is a regex
   public static String[] split(String s, char delim) {
     return s.split("\\" + delim);
   }
@@ -1511,8 +1512,7 @@ public final class UtilPlume {
    *
    * <p>Consider using the built-in <a
    * href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/String.html#split(java.lang.String)">String.split</a>
-   * method, method, which takes a regular expression whereas this method takes a character that is
-   * interpreted literally.
+   * method, method, which takes a regular expression whereas this method takes string
    *
    * @see #split(String s, char delim)
    * @param s the string to split
@@ -2077,12 +2077,13 @@ public final class UtilPlume {
    * @return vector of strings resulting from tokenization
    * @deprecated use {@link StringsPlume#tokens}
    */
+  @SuppressWarnings("NonApiType")
   @Deprecated // 2020-12-02
   // @InlineMe(
   //     replacement = "StringsPlume.tokens(str, delim, returnDelims)",
   //     imports = "org.plumelib.util.StringsPlume")
   public static ArrayList<Object> tokens(String str, String delim, boolean returnDelims) {
-    return StringsPlume.tokens(str, delim, returnDelims);
+    return (ArrayList<Object>) StringsPlume.tokens(str, delim, returnDelims);
   }
 
   /**
@@ -2094,12 +2095,13 @@ public final class UtilPlume {
    * @return vector of strings resulting from tokenization
    * @deprecated use {@link StringsPlume#tokens}
    */
+  @SuppressWarnings("NonApiType")
   @Deprecated // 2020-12-02
   // @InlineMe(
   //     replacement = "StringsPlume.tokens(str, delim)",
   //     imports = "org.plumelib.util.StringsPlume")
   public static ArrayList<Object> tokens(String str, String delim) {
-    return StringsPlume.tokens(str, delim);
+    return (ArrayList<Object>) StringsPlume.tokens(str, delim);
   }
 
   /**
@@ -2110,10 +2112,11 @@ public final class UtilPlume {
    * @return vector of strings resulting from tokenization
    * @deprecated use {@link StringsPlume#tokens}
    */
+  @SuppressWarnings("NonApiType")
   @Deprecated // 2020-12-02
   // @InlineMe(replacement = "StringsPlume.tokens(str)", imports = "org.plumelib.util.StringsPlume")
   public static ArrayList<Object> tokens(String str) {
-    return StringsPlume.tokens(str);
+    return (ArrayList<Object>) StringsPlume.tokens(str);
   }
 
   ///////////////////////////////////////////////////////////////////////////
