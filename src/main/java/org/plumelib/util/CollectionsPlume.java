@@ -367,9 +367,19 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Applies the function to each element of the given iterable, producing a list of the results.
+   * Applies the function to each element of the given iterable, producing a new list of the
+   * results. The point of this method is to make mapping operations more concise. You can write
    *
-   * <p>The point of this method is to make mapping operations more concise. Import it with
+   * <pre>{@code   return mapList(LemmaAnnotation::get, tokens);}</pre>
+   *
+   * instead of
+   *
+   * <pre>{@code   return tokens
+   *            .stream()
+   *            .map(LemmaAnnotation::get)
+   *            .collect(Collectors.toList());}</pre>
+   *
+   * Import this method with
    *
    * <pre>import static org.plumelib.util.CollectionsPlume.mapList;</pre>
    *
@@ -441,11 +451,19 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Applies the function to each element of the given iterable, producing a list of the results.
-   * This is just like {@link #mapList(Function, Iterable)}, but with the arguments in the opposite
-   * order.
+   * Applies the function to each element of the given iterable, producing a new list of the
+   * results. The point of this method is to make mapping operations more concise. You can write
    *
-   * <p>The point of this method is to make mapping operations more concise. Import it with
+   * <pre>{@code   return transform(tokens, LemmaAnnotation::get);}</pre>
+   *
+   * instead of
+   *
+   * <pre>{@code   return tokens
+   *            .stream()
+   *            .map(LemmaAnnotation::get)
+   *            .collect(Collectors.toList());}</pre>
+   *
+   * Import this method with
    *
    * <pre>import static org.plumelib.util.CollectionsPlume.transform;</pre>
    *
@@ -1372,8 +1390,20 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Given an expected number of elements, returns the capacity that should be passed to a HashMap
-   * or HashSet constructor, so that the set or map will not resize.
+   * Given an array, returns the capacity that should be passed to a HashMap or HashSet constructor,
+   * so that the set or map will not resize.
+   *
+   * @param <T> the type of elements of the array
+   * @param a an array whose length is the maximum expected number of elements in the map or set
+   * @return the initial capacity to pass to a HashMap or HashSet constructor
+   */
+  public static <T> int mapCapacity(T[] a) {
+    return mapCapacity(a.length);
+  }
+
+  /**
+   * Given a collection, returns the capacity that should be passed to a HashMap or HashSet
+   * constructor, so that the set or map will not resize.
    *
    * @param c a collection whose size is the maximum expected number of elements in the map or set
    * @return the initial capacity to pass to a HashMap or HashSet constructor
@@ -1383,8 +1413,8 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Given an expected number of elements, returns the capacity that should be passed to a HashMap
-   * or HashSet constructor, so that the set or map will not resize.
+   * Given a map, returns the capacity that should be passed to a HashMap or HashSet constructor, so
+   * that the set or map will not resize.
    *
    * @param m a map whose size is the maximum expected number of elements in the map or set
    * @return the initial capacity to pass to a HashMap or HashSet constructor
