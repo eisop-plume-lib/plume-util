@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -363,6 +364,15 @@ public final class CollectionsPlumeTest {
   }
 
   @Test
+  void testDuplicates() {
+    assertEquals(Collections.emptyList(), new ArrayList<>(CollectionsPlume.duplicates(l123)));
+    assertEquals(l123, new ArrayList<>(CollectionsPlume.duplicates(l123123)));
+    assertEquals(Arrays.asList(2), new ArrayList<>(CollectionsPlume.duplicates(l12223)));
+    assertEquals(Arrays.asList(1), new ArrayList<>(CollectionsPlume.duplicates(l1123)));
+    assertEquals(Arrays.asList(3), new ArrayList<>(CollectionsPlume.duplicates(l1233)));
+  }
+
+  @Test
   @SuppressWarnings("ArrayEquals") // demonstrates the effect of regular equals
   public void testDeepEquals() {
 
@@ -408,6 +418,15 @@ public final class CollectionsPlumeTest {
     List<Object> in = Arrays.asList(new Object[] {1, 2, 3});
     List<Object> out = Arrays.asList(new Object[] {"1", "2", "3"});
     assertEquals(out, CollectionsPlume.transform(in, Object::toString));
+  }
+
+  @Test
+  public void testListFilter() {
+    List<Integer> in = Arrays.asList(new Integer[] {1, 2, 3, 4, 5});
+    List<Integer> odd = Arrays.asList(new Integer[] {1, 3, 5});
+    List<Integer> even = Arrays.asList(new Integer[] {2, 4});
+    assertEquals(odd, CollectionsPlume.listFilter(in, i -> i % 2 == 1));
+    assertEquals(even, CollectionsPlume.listFilter(in, i -> i % 2 == 0));
   }
 
   @Test

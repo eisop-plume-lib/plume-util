@@ -1,9 +1,12 @@
 # Plume-Util change log
 
-## 1.8.2
+## 1.9.0 (????-??-??)
+
+- Require Java 11
 - `StringsPlume`: add `rpad` that pads with an arbitrary character
-- `CollectionsPlume`: add an overload for `mapCapacity()`
-- TODO: FilesPlume changes.
+- `CollectionsPlume`:
+   * add methods `duplicates()` and `listFilter()`
+   * add an overload for `mapCapacity()`
 
 ## 1.8.1 (2023-06-02)
 
