@@ -1,16 +1,102 @@
 # Plume-Util change log
 
-## 1.6.6 (??)
+## 2.0.0 (????-??-??)
 
+- Require Java 11.
+- Renamed `*Plume` classes to `*P`, for brevity; for example, use `CollectionsP` instead of `CollectionsPlume`.
+- Removed all deprecated classes and mehods.
+
+## 1.10.0 (2024-??-??)
+
+- `OrderedPairIterator`: uses `IPair` instead of `MPair`
+- `ArraysPlume`:  deprecated `sorted()` in favor of `isSorted()`
+- `StringsPlume`:
+    * `firstLineSeparator()` can return null
+    * new method `isVersionNumberLE()`
+    * new class `VersionNumberComparator`
+- `CollectionsPlume`:  new methods `anyMatch()`, `allMatch()`, `noneMatch`
+
+## 1.9.3 (2024-04-19)
+
+- `CollectionsPlume`:
+    * deprecated `Filter`; use `java.util.function.Predicate` instead
+    * new method `replace(Collection<T> c, Collection<Replacement<T>> replacements)`
+    * new method `isSubsequenceMaybeNonContiguous(Iterable<T>, Iterable<T>)`
+- `StringsPlume`:
+    * new methods `splitRetainSeparators()` and `splitLinesRetainSeparators()`
+- `FilesPlume`:
+    * deprecate `fileContents()` in favor of new method `readString()`
+    * deprecate `writeFile()` in favor of new method `writeString()`
+    * new method `readLinesRetainingSeparators()`
+    * new method `writeString(Path, String)`
+
+## 1.9.2 (2024-04-07)
+
+- Don't use `@InlineMe`, which breaks javac in some clients.
+
+## 1.9.1 (2024-04-06)
+
+- `FilesPlume`:
+    * deprecate `readFile()` in favor of `fileContents()`
+- `StringsPlume`:
+   * new method `firstLineSeparator(String)`
+   * improved behavior of `splitLines(String)`
+- `CollectionsPlume`:
+   * new method `indexOf(list, value, startIndex)`
+
+## 1.9.0 (2023-12-08)
+
+- `StringsPlume`:
+    * `rpad` and `lpad` add an ellipsis ("...") if it truncates
+    * `rpad(double, ...)` does not truncate values before the decimal point
+    * add `rpad` that pads with an arbitrary character
+    * add `rpad` that never truncates
+    * add `lpad` that never truncates
+- `CollectionsPlume`:
+   * add methods `duplicates()` and `listFilter()`
+   * add an overload for `mapCapacity()`
+   * deprecated `noDuplicates()`; use `hasNoDuplicates()` instead
+   * deprecated `listFilter()`; use `filter()` instead
+- `ArraysPlume`:
+   * deprecated `noDuplicates()`; use `hasNoDuplicates()` instead
+
+## 1.8.1 (2023-06-02)
+
+- `CollectionsPlume`: remove conflicting overrides of `deepCopy()`
+- `IPair` and `MPair`: rename fields from `a` and `b` to `first` and `second`
+- `MPair`: new methods `cloneElements()`, `deepCopy()`, `deepCopyFirst()`, `deepCopySecond()`
+- `StringsPlume`: add `rpad` that pads with an arbitrary character
+- `FilesPlume`: new `InputStream` methods `available()`, `isWhitespaceOnly()`, `readCodePoint()`
+
+## 1.8.0 (2023-06-02)
+
+- Deprecated `Pair` class for mutable pairs; use `MPair` instead.
+  `OrderedPairIterator` uses `MPair` instead of `Pair`.
+- New class `IPair` for immutable pairs.
+- The `WeakIdentityPair` constructor is deprecated in favor of the `of()` method.
+- New interface `DeepCopyable`.
+- New methods in `UtilPlume`:
+   * `firstNonNull()`
+- New methods in `CollectionsPlume`:
+   * for `Collection`s: `cloneElements()`, `deepCopy()`
+   * for `Map`s: `cloneElements()`, `cloneValues()`, `createLruCache()`
+
+## 1.7.0 (2023-05-10)
+
+- Moved classes `Hasher`, `WeakHasherMap`, and `WeakIdentityHashMap`
+  to a new project, hashmap-util.  It is available on Maven Central.
 - In `ArraySet`:
    * new method `ArraySet.sort`.
    * widened the formal parameter type of `newArraySetOrHashSet` and `newArraySetOrLinkedHashSet`.
-- New methodsin `CollectionsPlume`:
+- New methods in `CollectionsPlume`:
    * `sortedSetContainsAll`, `sortedSetEquals`, and `withoutDuplicatesSorted`.
    * `deepCopy(List)`, `deepCopy(TreeSet)`, `deepCopy(Map)`, and `deepCopyValues(Map)`.
 - New method `UtilPlume.clone(Object)`.
+- New method `StringsPlume.toStringTruncated(Object, int)`.
+- In `ArraysPlume`, the generic signatures of `isSubarrayEq` and `indexOfEq`
+  have changed.  Let us know if this causes a problem.
 
-## 1.6.5 (2022-01-08)
+## 1.6.5 (2023-01-08)
 
 - New methods `newArrayMapOrHashMap`, `newArrayMapOrLinkedHashMap`,
   `newArraySetOrHashSet`, and `newArraySetOrLinkedHashSet`.

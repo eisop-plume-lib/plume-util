@@ -4,10 +4,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.regex.Pattern;
 import org.checkerframework.common.value.qual.ArrayLen;
 import org.junit.jupiter.api.Test;
+import org.plumelib.util.StringsPlume.VersionNumberComparator;
 
 /** Test the stringsPlume class. */
 public final class StringsPlumeTest {
@@ -236,6 +238,24 @@ public final class StringsPlumeTest {
   }
 
   @Test
+  public void test_isVersionNumberLE() {
+
+    VersionNumberComparator vnc = new VersionNumberComparator();
+
+    assertEquals(0, vnc.compare("123.456.789", "123.456.789"));
+    assertEquals(-1, vnc.compare("113.456.789", "123.456.789"));
+    assertEquals(-1, vnc.compare("123.416.789", "123.456.789"));
+    assertEquals(-1, vnc.compare("123.456.719", "123.456.789"));
+    assertEquals(-1, vnc.compare("123.456.789", "193.456.789"));
+    assertEquals(-1, vnc.compare("123.456.789", "123.496.789"));
+    assertEquals(-1, vnc.compare("123.456.789", "123.456.799"));
+    assertEquals(-1, vnc.compare("123", "123.456.789"));
+    assertEquals(-1, vnc.compare("123.456", "123.456.789"));
+    assertEquals(1, vnc.compare("123.456.789", "123"));
+    assertEquals(1, vnc.compare("123.456.789", "123.456"));
+  }
+
+  @Test
   public void test_nplural() {
 
     // public static String nplural(int n, String noun)
@@ -299,10 +319,18 @@ public final class StringsPlumeTest {
     assertEquals("     ", StringsPlume.rpad("", 5));
     assertEquals("abcd ", StringsPlume.rpad("abcd", 5));
     assertEquals("abcde", StringsPlume.rpad("abcde", 5));
-    assertEquals("abcde", StringsPlume.rpad("abcdef", 5));
-    assertEquals("abcde", StringsPlume.rpad("abcde ghij", 5));
+    assertEquals("ab...", StringsPlume.rpad("abcdef", 5));
+    assertEquals("ab...", StringsPlume.rpad("abcde ghij", 5));
     assertEquals("10   ", StringsPlume.rpad(10, 5));
     assertEquals("3.14 ", StringsPlume.rpad(3.14, 5));
+    assertEquals("3.141", StringsPlume.rpad(3.141592, 5));
+    assertEquals("3141592", StringsPlume.rpad(3141592, 5));
+    assertEquals("12", StringsPlume.rpad(12.34567, 1));
+    assertEquals("12", StringsPlume.rpad(12.34567, 2));
+    assertEquals("12 ", StringsPlume.rpad(12.34567, 3));
+    assertEquals("12.3", StringsPlume.rpad(12.34567, 4));
+    assertEquals("12.34", StringsPlume.rpad(12.34567, 5));
+    assertEquals("12.345", StringsPlume.rpad(12.34567, 6));
 
     // public static class NullableStringComparator
     //   public int compare(Object o1, Object o2)
@@ -382,23 +410,65 @@ public final class StringsPlumeTest {
 
   @Test
   public void testSplitLines() {
-
     String str = "one\ntwo\n\rthree\r\nfour\rfive\n\n\nsix\r\n\r\n\r\n";
     @SuppressWarnings("value") // method that returns an array is not StaticallyExecutable
-    String @ArrayLen(11) [] sa = StringsPlume.splitLines(str);
+    String @ArrayLen(12) [] sa = StringsPlume.splitLines(str);
     // for (String s : sa)
     //   System.out.printf ("'%s'%n", s);
-    assertEquals(11, sa.length);
+    assertEquals(12, sa.length);
     assertEquals("one", sa[0]);
     assertEquals("two", sa[1]);
-    assertEquals("three", sa[2]);
-    assertEquals("four", sa[3]);
-    assertEquals("five", sa[4]);
-    assertEquals("", sa[5]);
+    assertEquals("", sa[2]);
+    assertEquals("three", sa[3]);
+    assertEquals("four", sa[4]);
+    assertEquals("five", sa[5]);
     assertEquals("", sa[6]);
-    assertEquals("six", sa[7]);
-    assertEquals("", sa[8]);
+    assertEquals("", sa[7]);
+    assertEquals("six", sa[8]);
     assertEquals("", sa[9]);
     assertEquals("", sa[10]);
+    assertEquals("", sa[11]);
+  }
+
+  @Test
+  public void testFirstLineSeparator() {
+    assertEquals(null, StringsPlume.firstLineSeparator("hello"));
+    assertEquals("\n", StringsPlume.firstLineSeparator("hello\ngoodbye"));
+    assertEquals("\n", StringsPlume.firstLineSeparator("hello\ngoodbye\rau revior"));
+    assertEquals("\n", StringsPlume.firstLineSeparator("hello\ngoodbye\rau revior\r\nWindows"));
+    assertEquals("\n", StringsPlume.firstLineSeparator("hello\n\rgoodbye\rau revior\r\nWindows"));
+
+    assertEquals("\r", StringsPlume.firstLineSeparator("hello\rgoodbye"));
+    assertEquals("\r", StringsPlume.firstLineSeparator("hello\rgoodbye\nau revior"));
+    assertEquals("\r", StringsPlume.firstLineSeparator("hello\rgoodbye\nau revior\r\nWindows"));
+
+    assertEquals("\r\n", StringsPlume.firstLineSeparator("hello\r\ngoodbye"));
+    assertEquals("\r\n", StringsPlume.firstLineSeparator("hello\r\ngoodbye\nau revior"));
+    assertEquals("\r\n", StringsPlume.firstLineSeparator("hello\r\ngoodbye\nau revior\rold MacOS"));
+  }
+
+  @Test
+  void testSplitLinesRetainSeparators() {
+    String text = "hello\rworld\nhello\r\nworld\n\rfoo";
+    List<String> result = StringsPlume.splitLinesRetainSeparators(text);
+    List<String> expected =
+        Arrays.asList(new String[] {"hello\r", "world\n", "hello\r\n", "world\n", "\r", "foo"});
+    assertEquals(expected, result);
+  }
+
+  @Test
+  void testSplitRetainSeparators() {
+    // There are two overloaded methods to test here.
+  }
+
+  @Test
+  public void testToStringTruncated() {
+    assertEquals("0123456789", StringsPlume.toStringTruncated("0123456789", 100));
+    assertEquals("0123456789", StringsPlume.toStringTruncated("0123456789", 10));
+    assertEquals("\"012...\"", StringsPlume.toStringTruncated("0123456789", 8));
+    assertEquals("\"0...\"", StringsPlume.toStringTruncated("0123456789", 6));
+    assertEquals("\"0...\"", StringsPlume.toStringTruncated("0123456", 6));
+    assertEquals("012345", StringsPlume.toStringTruncated("012345", 6));
+    assertEquals("01234", StringsPlume.toStringTruncated("01234", 6));
   }
 }

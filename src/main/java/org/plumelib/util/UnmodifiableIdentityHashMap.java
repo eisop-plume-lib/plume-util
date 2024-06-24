@@ -10,6 +10,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.lock.qual.GuardSatisfied;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.checker.signedness.qual.UnknownSignedness;
@@ -168,6 +169,10 @@ public class UnmodifiableIdentityHashMap<K, V> extends IdentityHashMap<K, V> {
     throw new UnsupportedOperationException();
   }
 
+  @SuppressWarnings({
+    "lock:unneeded.suppression", // see immediately below
+    "lock:override.param" // needed in Java 21, not needed in Java 8 or 11; not sure about Java 17
+  })
   @Override
   public boolean remove(
       @GuardSatisfied @UnknownSignedness Object key,
@@ -193,7 +198,7 @@ public class UnmodifiableIdentityHashMap<K, V> extends IdentityHashMap<K, V> {
 
   @Override
   public @PolyNull V computeIfPresent(
-      K key, BiFunction<? super K, ? super V, ? extends @PolyNull V> remappingFunction) {
+      K key, BiFunction<? super K, ? super @NonNull V, ? extends @PolyNull V> remappingFunction) {
     throw new UnsupportedOperationException();
   }
 
@@ -205,7 +210,9 @@ public class UnmodifiableIdentityHashMap<K, V> extends IdentityHashMap<K, V> {
 
   @Override
   public @PolyNull V merge(
-      K key, V value, BiFunction<? super V, ? super V, ? extends @PolyNull V> remappingFunction) {
+      K key,
+      @NonNull V value,
+      BiFunction<? super @NonNull V, ? super @NonNull V, ? extends @PolyNull V> remappingFunction) {
     throw new UnsupportedOperationException();
   }
 }

@@ -1,32 +1,51 @@
 // REQUIREMENTS to make a release:
-//  * Perform work on a machine connected to the CSE filesystem.
 //  * Your ~/.gradle/gradle.properties file must contain:
 //     ossrhUsername=YOUR_USER_NAME_HERE
 //     ossrhPassword=YOUR_PASSWORD_HERE
 
-// To make a release:
-//  * Use JDK 8
+// To make a release (run on any filesystem, except the `javadocWeb` step):
+//  * Make a snapshot release and test it on some clients:
+//     * Approach 1:  to Maven Central
+//        * Set "version" (below) to end in "-SNAPSHOT".
+//        * git pull && ./gradlew clean publish
+//        * In the clients' build.gradle: set version number and use:
+//            repositories {
+//              ...
+//              maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
+//            }
+//            configurations.all {
+//              resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+//            }
+//     * Approach 2:  to Maven Local
+//        * Set "version" (below) to end in "-SNAPSHOT".
+//        * git pull && ./gradlew PublishToMavenLocal
+//        * In the clients' build.gradle: set version number and use:
+//            repositories {
+//              mavenLocal()
+//            }
+//    For the Checker Framework:
+//     * usecf THE-BRANCH-THAT-USES-THE-SNAPSHOT
+//     * checker/bin-devel/test-cftests-all.sh && checker/bin-devel/test-typecheck.sh && checker/bin-devel/test-plume-lib.sh
+//    For Daikon: make compile junit test
 //  * git pull
 //  * In ../build.gradle, ensure that "To use a snapshot version" is not enabled.
 //  * Update the version number in ../README.md and in this file (multiple times in each).
 //    Ensure the version number in this file does not contain "-SNAPSHOT".
 //  * Update ../CHANGELOG.md .
 //  * Save files and stage changes.
-//  * Run in the top-level directory:
-//      ./gradlew clean publish && ./gradlew javadocWeb
-//    or, to use a locally-built Checker Framework:
-//      ./gradlew -PcfLocal clean publish && ./gradlew -PcfLocal javadocWeb
+//  * Run in the top-level directory:  ./gradlew clean publish
 //  * Browse to https://oss.sonatype.org/#stagingRepositories, complete the Maven Central release.
 //  * Add a git tag:
-//    VER=1.6.5 && git commit -m "Version $VER" && git push && git tag -a v$VER -m "Version $VER" && git push && git push --tags
-//  * Make a GitHub release. Go to the GitHub releases page, make a release, call it "plume-util 1.6.5", use the text from ../CHANGELOG.md as the description, attach the .jar file from ../build/libs/
-
+//    VER=1.9.3 && git commit -m "Version $VER" && git push && git tag -a v$VER -m "Version $VER" && git push && git push --tags
+//  * Make a GitHub release. Go to the GitHub releases page, make a release, call it "plume-util 1.9.3", use the text from ../CHANGELOG.md as the description, attach the .jar and -all.jar files from ../build/libs/ .
+//  * Finally, run on the CSE filesystem:  git pull && ./gradlew javadocWeb
+//  * Update clients and test, so that if it's broken we can re-release.
 
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
 group 'org.plumelib'
-version '1.6.5'
+version '1.10.0-SNAPSHOT'
 
 final isSnapshot = version.contains('SNAPSHOT')
 
@@ -45,8 +64,8 @@ publishing {
       from components.java
 
       pom {
-        name = 'Plume-lib Util'
-        description = 'Utility libraries for Java.'
+        name = 'Plume Util'
+        description = 'Utility libraries for Java.  Complements Guava, Apache Commons, etc.'
         url = 'https://github.com/plume-lib/plume-util'
 
         scm {

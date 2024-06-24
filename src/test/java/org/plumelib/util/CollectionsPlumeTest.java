@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -19,13 +20,12 @@ import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Predicate;
 import org.checkerframework.checker.index.qual.IndexFor;
 import org.checkerframework.checker.lock.qual.GuardSatisfied;
 import org.junit.jupiter.api.Test;
+import org.plumelib.util.CollectionsPlume.Replacement;
 
-@SuppressWarnings({
-  "UseCorrectAssertInTests" // `assert` works fine in tests
-})
 public final class CollectionsPlumeTest {
 
   // If true, do 100 instead of 100000 iterations when testing randomElements.
@@ -37,6 +37,7 @@ public final class CollectionsPlumeTest {
   /// Helper functions
   ///
 
+  @SuppressWarnings("NonApiType")
   public static <T> ArrayList<T> toArrayList(Iterator<T> itor) {
     ArrayList<T> v = new ArrayList<>();
     while (itor.hasNext()) {
@@ -45,7 +46,7 @@ public final class CollectionsPlumeTest {
     return v;
   }
 
-  @SuppressWarnings("JdkObsolete")
+  @SuppressWarnings({"JdkObsolete", "NonApiType"})
   public static <T> ArrayList<T> toArrayList(Enumeration<T> e) {
     ArrayList<T> v = new ArrayList<>();
     while (e.hasMoreElements()) {
@@ -73,11 +74,11 @@ public final class CollectionsPlumeTest {
     // Could make these lists immutable to avoid accidental modification in the tests.
   }
 
-  private static class OddFilter implements Filter<Integer> {
-    public OddFilter() {}
+  private static class OddPredicate implements Predicate<Integer> {
+    public OddPredicate() {}
 
     @Override
-    public boolean accept(Integer i) {
+    public boolean test(Integer i) {
       return i.intValue() % 2 != 0;
     }
   }
@@ -132,20 +133,23 @@ public final class CollectionsPlumeTest {
     // public static class IteratorEnumeration implements Enumeration
 
     assertTrue(iota0.equals(toArrayList(iota0.iterator())));
-    assert iota0.equals(
-        toArrayList(new CollectionsPlume.IteratorEnumeration<Integer>(iota0.iterator())));
+    assertEquals(
+        iota0, toArrayList(new CollectionsPlume.IteratorEnumeration<Integer>(iota0.iterator())));
     assertTrue(iota10.equals(toArrayList(iota10.iterator())));
-    assert iota10.equals(
-        toArrayList(new CollectionsPlume.IteratorEnumeration<Integer>(iota10.iterator())));
+    assertEquals(
+        iota10, toArrayList(new CollectionsPlume.IteratorEnumeration<Integer>(iota10.iterator())));
 
     // public static class MergedIterator2 implements Iterator {
-    assert iota10Twice.equals(
+    assertEquals(
+        iota10Twice,
         toArrayList(
             new CollectionsPlume.MergedIterator2<Integer>(iota10.iterator(), iota10.iterator())));
-    assert iota10.equals(
+    assertEquals(
+        iota10,
         toArrayList(
             new CollectionsPlume.MergedIterator2<Integer>(iota0.iterator(), iota10.iterator())));
-    assert iota10.equals(
+    assertEquals(
+        iota10,
         toArrayList(
             new CollectionsPlume.MergedIterator2<Integer>(iota10.iterator(), iota0.iterator())));
 
@@ -154,7 +158,8 @@ public final class CollectionsPlumeTest {
     iota10IteratorThrice.add(iota10.iterator());
     iota10IteratorThrice.add(iota10.iterator());
     iota10IteratorThrice.add(iota10.iterator());
-    assert iota10Thrice.equals(
+    assertEquals(
+        iota10Thrice,
         toArrayList(new CollectionsPlume.MergedIterator<Integer>(iota10IteratorThrice.iterator())));
     ArrayList<Iterator<Integer>> iota10IteratorTwice1 = new ArrayList<>();
     iota10IteratorTwice1.add(iota0.iterator());
@@ -168,11 +173,14 @@ public final class CollectionsPlumeTest {
     iota10IteratorTwice3.add(iota10.iterator());
     iota10IteratorTwice3.add(iota10.iterator());
     iota10IteratorTwice3.add(iota0.iterator());
-    assert iota10Twice.equals(
+    assertEquals(
+        iota10Twice,
         toArrayList(new CollectionsPlume.MergedIterator<Integer>(iota10IteratorTwice1.iterator())));
-    assert iota10Twice.equals(
+    assertEquals(
+        iota10Twice,
         toArrayList(new CollectionsPlume.MergedIterator<Integer>(iota10IteratorTwice2.iterator())));
-    assert iota10Twice.equals(
+    assertEquals(
+        iota10Twice,
         toArrayList(new CollectionsPlume.MergedIterator<Integer>(iota10IteratorTwice3.iterator())));
   }
 
@@ -187,9 +195,10 @@ public final class CollectionsPlumeTest {
         iota10Odd.add(i);
       }
     }
-    assert iota10Odd.equals(
+    assertEquals(
+        iota10Odd,
         toArrayList(
-            new CollectionsPlume.FilteredIterator<Integer>(iota10.iterator(), new OddFilter())));
+            new CollectionsPlume.FilteredIterator<Integer>(iota10.iterator(), new OddPredicate())));
   }
 
   @Test
@@ -236,6 +245,7 @@ public final class CollectionsPlumeTest {
           }
         }
         @SuppressWarnings({
+          "index:type.arguments.not.inferred",
           "lowerbound:assignment",
           "index:assignment",
           "value"
@@ -357,6 +367,15 @@ public final class CollectionsPlumeTest {
   }
 
   @Test
+  void testDuplicates() {
+    assertEquals(Collections.emptyList(), new ArrayList<>(CollectionsPlume.duplicates(l123)));
+    assertEquals(l123, new ArrayList<>(CollectionsPlume.duplicates(l123123)));
+    assertEquals(Arrays.asList(2), new ArrayList<>(CollectionsPlume.duplicates(l12223)));
+    assertEquals(Arrays.asList(1), new ArrayList<>(CollectionsPlume.duplicates(l1123)));
+    assertEquals(Arrays.asList(3), new ArrayList<>(CollectionsPlume.duplicates(l1233)));
+  }
+
+  @Test
   @SuppressWarnings("ArrayEquals") // demonstrates the effect of regular equals
   public void testDeepEquals() {
 
@@ -389,7 +408,7 @@ public final class CollectionsPlumeTest {
   }
 
   @Test
-  @SuppressWarnings("lock:methodref.receiver")
+  @SuppressWarnings("lock:methodref.receiver.invalid")
   public void testMapList() {
     List<Object> in = Arrays.asList(new Object[] {1, 2, 3});
     List<Object> out = Arrays.asList(new Object[] {"1", "2", "3"});
@@ -397,11 +416,203 @@ public final class CollectionsPlumeTest {
   }
 
   @Test
-  @SuppressWarnings("lock:methodref.receiver")
+  @SuppressWarnings("lock:methodref.receiver.invalid")
   public void testTransform() {
     List<Object> in = Arrays.asList(new Object[] {1, 2, 3});
     List<Object> out = Arrays.asList(new Object[] {"1", "2", "3"});
     assertEquals(out, CollectionsPlume.transform(in, Object::toString));
+  }
+
+  @Test
+  public void testAnyMatch() {
+    List<Integer> iota = Arrays.asList(new Integer[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    assertTrue(CollectionsPlume.anyMatch(iota, i -> i > -5));
+    assertTrue(CollectionsPlume.anyMatch(iota, i -> i > 5));
+    assertFalse(CollectionsPlume.anyMatch(iota, i -> i > 15));
+  }
+
+  @Test
+  public void testAllMatch() {
+    List<Integer> iota = Arrays.asList(new Integer[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    assertTrue(CollectionsPlume.allMatch(iota, i -> i > -5));
+    assertFalse(CollectionsPlume.allMatch(iota, i -> i > 5));
+    assertFalse(CollectionsPlume.allMatch(iota, i -> i > 15));
+  }
+
+  @Test
+  public void testNoneMatch() {
+    List<Integer> iota = Arrays.asList(new Integer[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    assertFalse(CollectionsPlume.noneMatch(iota, i -> i > -5));
+    assertFalse(CollectionsPlume.noneMatch(iota, i -> i > 5));
+    assertTrue(CollectionsPlume.noneMatch(iota, i -> i > 15));
+  }
+
+  @Test
+  public void testListFilter() {
+    List<Integer> in = Arrays.asList(new Integer[] {1, 2, 3, 4, 5});
+    List<Integer> odd = Arrays.asList(new Integer[] {1, 3, 5});
+    List<Integer> even = Arrays.asList(new Integer[] {2, 4});
+    assertEquals(odd, CollectionsPlume.filter(in, i -> i % 2 == 1));
+    assertEquals(even, CollectionsPlume.filter(in, i -> i % 2 == 0));
+  }
+
+  @Test
+  public void testIndexOf() {
+    List<Integer> nums = Arrays.asList(new Integer[] {0, 1, 2, 3, 4, 5, 0, 1, 2});
+    assertEquals(3, CollectionsPlume.indexOf(nums, 3, 0));
+    assertEquals(-1, CollectionsPlume.indexOf(nums, 3, 5));
+    assertEquals(7, CollectionsPlume.indexOf(nums, 1, 3));
+    assertEquals(-1, CollectionsPlume.indexOf(nums, 100, 0));
+  }
+
+  @Test
+  public void testReplace() {
+    List<Integer> iota = Arrays.asList(new Integer[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    List<Integer> empty = Arrays.asList(new Integer[] {});
+    List<Integer> l_101_103 = Arrays.asList(new Integer[] {101, 102, 103});
+    List<Integer> l_201_205 = Arrays.asList(new Integer[] {201, 202, 203, 204, 205});
+
+    {
+      List<Replacement<Integer>> replacements =
+          Arrays.asList(Replacement.of(1, 3, l_101_103), Replacement.of(5, 6, l_201_205));
+      List<Integer> expected =
+          Arrays.asList(new Integer[] {0, 101, 102, 103, 4, 201, 202, 203, 204, 205, 7, 8, 9});
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements =
+          Arrays.asList(
+              Replacement.of(1, 1, Arrays.asList(new Integer[] {101, 102, 103})),
+              Replacement.of(5, 5, Arrays.asList(new Integer[] {201, 202, 203, 204, 205})));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected =
+          Arrays.asList(
+              new Integer[] {0, 101, 102, 103, 2, 3, 4, 201, 202, 203, 204, 205, 6, 7, 8, 9});
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements =
+          Arrays.asList(
+              Replacement.of(1, 0, Arrays.asList(new Integer[] {101, 102, 103})),
+              Replacement.of(5, 4, Arrays.asList(new Integer[] {201, 202, 203, 204, 205})));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected =
+          Arrays.asList(
+              new Integer[] {0, 101, 102, 103, 1, 2, 3, 4, 201, 202, 203, 204, 205, 5, 6, 7, 8, 9});
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements =
+          Arrays.asList(
+              Replacement.of(0, 4, Arrays.asList(new Integer[] {101, 102, 103})),
+              Replacement.of(5, 5, Arrays.asList(new Integer[] {201, 202, 203, 204, 205})));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected =
+          Arrays.asList(new Integer[] {101, 102, 103, 201, 202, 203, 204, 205, 6, 7, 8, 9});
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements = Arrays.asList(Replacement.of(0, 9, empty));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected = empty;
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements = Arrays.asList(Replacement.of(1, 8, empty));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected = Arrays.asList(new Integer[] {0, 9});
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements =
+          Arrays.asList(Replacement.of(0, 5, l_101_103), Replacement.of(5, 8, l_201_205));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected =
+          Arrays.asList(new Integer[] {101, 102, 103, 201, 202, 203, 204, 205, 9});
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements = Arrays.asList(Replacement.of(9, 9, l_101_103));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected =
+          Arrays.asList(new Integer[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 101, 102, 103});
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements = Arrays.asList(Replacement.of(9, 8, l_101_103));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected =
+          Arrays.asList(new Integer[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 101, 102, 103, 9});
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements = Arrays.asList(Replacement.of(0, 0, l_101_103));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected =
+          Arrays.asList(new Integer[] {101, 102, 103, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements = Arrays.asList(Replacement.of(0, -1, l_101_103));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected =
+          Arrays.asList(new Integer[] {101, 102, 103, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements =
+          Arrays.asList(
+              Replacement.of(0, 4, l_101_103),
+              Replacement.of(5, 4, l_201_205),
+              Replacement.of(5, 4, l_201_205));
+      List<Integer> replaced = CollectionsPlume.replace(iota, replacements);
+      List<Integer> expected =
+          Arrays.asList(
+              new Integer[] {
+                101, 102, 103, 201, 202, 203, 204, 205, 201, 202, 203, 204, 205, 5, 6, 7, 8, 9
+              });
+      assertEquals(expected, replaced);
+    }
+
+    {
+      List<Replacement<Integer>> replacements = Arrays.asList(Replacement.of(0, -1, l_101_103));
+      List<Integer> replaced = CollectionsPlume.replace(empty, replacements);
+      List<Integer> expected = l_101_103;
+      assertEquals(expected, replaced);
+    }
+  }
+
+  @Test
+  public void testIsSubsequenceMaybeNonContiguous() {
+    List<Integer> iota = Arrays.asList(new Integer[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9});
+    List<Integer> iota11 = Arrays.asList(new Integer[] {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10});
+    List<Integer> empty = Arrays.asList(new Integer[] {});
+
+    assertTrue(CollectionsPlume.isSubsequenceMaybeNonContiguous(empty, empty));
+    assertTrue(CollectionsPlume.isSubsequenceMaybeNonContiguous(iota, empty));
+    assertFalse(CollectionsPlume.isSubsequenceMaybeNonContiguous(empty, iota));
+
+    assertTrue(CollectionsPlume.isSubsequenceMaybeNonContiguous(iota, Arrays.asList(0)));
+    assertTrue(CollectionsPlume.isSubsequenceMaybeNonContiguous(iota, Arrays.asList(0, 1, 2)));
+    assertTrue(CollectionsPlume.isSubsequenceMaybeNonContiguous(iota, Arrays.asList(9)));
+    assertTrue(CollectionsPlume.isSubsequenceMaybeNonContiguous(iota, Arrays.asList(7, 8, 9)));
+    assertTrue(CollectionsPlume.isSubsequenceMaybeNonContiguous(iota, Arrays.asList(5)));
+    assertTrue(CollectionsPlume.isSubsequenceMaybeNonContiguous(iota, Arrays.asList(4, 5, 6)));
+    assertTrue(CollectionsPlume.isSubsequenceMaybeNonContiguous(iota, Arrays.asList(2, 4, 6, 8)));
+    assertFalse(CollectionsPlume.isSubsequenceMaybeNonContiguous(iota, iota11));
+    assertTrue(CollectionsPlume.isSubsequenceMaybeNonContiguous(iota11, iota));
   }
 
   @Test

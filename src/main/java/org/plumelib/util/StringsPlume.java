@@ -109,6 +109,11 @@ public final class StringsPlume {
    * @param replacement the replacement for each match of the regular expression
    * @return the string, with each match for the regex replaced
    */
+  @SuppressWarnings({
+    "allcheckers:purity.not.sideeffectfree.call", // needs JDK annotations
+    "lock:method.guarantee.violated" // needs JDK annotations
+  })
+  @SideEffectFree
   public static String replaceAll(String s, Pattern regex, String replacement) {
     Matcher m = regex.matcher(s);
     return m.replaceAll(replacement);
@@ -187,20 +192,102 @@ public final class StringsPlume {
   /// Splitting and joining
   ///
 
+  /** A pattern that matches all common line separators: lf, cr, cr-lf. */
+  private static Pattern allLineSeparators = Pattern.compile("\\R");
+
   /**
-   * Returns an array of Strings, one for each line in the argument. Always returns an array of
-   * length at least 1 (it might contain only the empty string). All common line separators (cr, lf,
-   * cr-lf, or lf-cr) are supported. Note that a string that ends with a line separator will return
-   * an empty string as the last element of the array.
+   * Returns an array of Strings, one for each line in the argument. The strings do <b>not</b> end
+   * with line separators. Always returns an array of length at least 1 (it might contain only the
+   * empty string). All common line separators (lf, cr, cr-lf) are supported. Note that a string
+   * that ends with a line separator will return an empty string as the last element of the array.
+   *
+   * <p>It is probably better to use {@code String.lines()} rather than this method.
+   *
+   * <p>Alternately, you could use {@link #firstLineSeparator} and split on its return value.
    *
    * @param s the string to split
    * @return an array of Strings, one for each line in the argument
    */
-  @SuppressWarnings("value:statically.executable.not.pure") // pure wrt `equals()` but not `==`
+  @SuppressWarnings({
+    "value:statically.executable.not.pure", // pure wrt `equals()` but not `==`
+    "allcheckers:purity.not.sideeffectfree.call", // TODO: check after JDK update
+    "lock:method.guarantee.violated" // TODO: check after JDK update
+  })
   @SideEffectFree
   @StaticallyExecutable
   public static String[] splitLines(String s) {
-    return s.split("\r\n?|\n\r?", -1);
+    return allLineSeparators.split(s, -1);
+  }
+
+  /**
+   * Returns the first line separator in the given string, or null if the string contains none.
+   *
+   * @param s a string
+   * @return the first line separator in the given string
+   */
+  @SuppressWarnings({
+    "regex:return", // all matches of allLineSeparators are regexes
+    "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
+    "lock:method.guarantee.violated" // side effect to local state
+  })
+  @SideEffectFree
+  public static @Nullable @Regex String firstLineSeparator(String s) {
+    Matcher m = allLineSeparators.matcher(s);
+    if (m.find()) {
+      return m.group();
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Splits a String into lines, keeping the line separator at the end of each substring.
+   *
+   * @param input the input String
+   * @return the split string
+   */
+  @SideEffectFree
+  public static List<String> splitLinesRetainSeparators(String input) {
+    return splitRetainSeparators(input, allLineSeparators);
+  }
+
+  /**
+   * Splits a String according to a regex, keeping the separator at the end of each substring.
+   *
+   * @param input the input String
+   * @param regex the regular expression upon which to split the input
+   * @return the split string
+   */
+  @SideEffectFree
+  public static List<String> splitRetainSeparators(String input, @Regex String regex) {
+    return splitRetainSeparators(input, Pattern.compile(regex));
+  }
+
+  /**
+   * Splits a String according to a pattern, keeping the separator at the end of each substring.
+   *
+   * @param input the input String
+   * @param p the pattern upon which to split the input
+   * @return the split string
+   */
+  @SuppressWarnings({
+    "index:argument", // m.end is @LTLengthOf("index")
+    "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
+    "lock:method.guarantee.violated" // needs JDK annotations
+  })
+  @SideEffectFree
+  public static List<String> splitRetainSeparators(String input, Pattern p) {
+    List<String> result = new ArrayList<String>();
+    Matcher m = p.matcher(input);
+    int pos = 0;
+    while (m.find()) {
+      result.add(input.substring(pos, m.end()));
+      pos = m.end();
+    }
+    if (pos < input.length()) {
+      result.add(input.substring(pos));
+    }
+    return result;
   }
 
   /**
@@ -522,6 +609,7 @@ public final class StringsPlume {
    * @param c character to quote
    * @return quoted version of c
    */
+  @SideEffectFree
   private static String escapeNonASCII(char c) {
     if (c == '"') {
       return "\\\"";
@@ -691,6 +779,12 @@ public final class StringsPlume {
    * @param s a string
    * @return true if the string contains only white space codepoints, otherwise false
    */
+  @SuppressWarnings({
+    "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
+    "allcheckers:purity.not.deterministic.not.sideeffectfree.call", // side effect to local state
+    "lock:method.guarantee.violated" // side effect to local state
+  })
+  @Pure
   public static boolean isBlank(String s) {
     return s.chars().allMatch(Character::isWhitespace);
   }
@@ -778,53 +872,131 @@ public final class StringsPlume {
   }
 
   /**
-   * Returns a string of the specified length, truncated if necessary, and padded with spaces to the
-   * left if necessary.
+   * Returns a string of the specified length, truncated if necessary (in which case the last 3
+   * non-truncated characters are replaced by "..."), and padded with spaces to the left if
+   * necessary.
    *
    * @param s string to truncate or pad
    * @param length goal length
-   * @return s truncated or padded to length characters
+   * @param c the character to use for padding
+   * @param truncate if false, no truncation is done, only padding
+   * @return {@code s} truncated or padded to {@code length} characters
    */
   @SuppressWarnings({
     "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
     "lock:method.guarantee.violated" // side effect to local state
   })
   @SideEffectFree
-  public static String lpad(String s, @NonNegative int length) {
-    if (s.length() < length) {
+  public static String lpad(String s, @NonNegative int length, char c, boolean truncate) {
+    int sLength = s.length();
+    if (sLength == length) {
+      return s;
+    } else if (sLength < length) {
       StringBuilder buf = new StringBuilder();
-      for (int i = s.length(); i < length; i++) {
-        buf.append(' ');
+      for (int i = sLength; i < length; i++) {
+        buf.append(c);
       }
-      return buf.toString() + s;
+      buf.append(s);
+      return buf.toString();
     } else {
-      return s.substring(0, length);
+      if (truncate && length > 3) {
+        return s.substring(0, length - 3) + "...";
+      } else {
+        return s;
+      }
     }
   }
 
   /**
-   * Returns a string of the specified length, truncated if necessary, and padded with spaces to the
+   * Returns a string of the specified length, truncated if necessary (in which case the last 3
+   * non-truncated characters are replaced by "..."), and padded with `c` to the left if necessary.
+   *
+   * @param s string to truncate or pad
+   * @param length goal length
+   * @param c character to use for padding
+   * @return {@code s} truncated or padded to {@code length} characters
+   */
+  @SideEffectFree
+  public static String lpad(String s, @NonNegative int length, char c) {
+    return lpad(s, length, c, true);
+  }
+
+  /**
+   * Returns a string of the specified length, truncated if necessary (in which case the last 3
+   * non-truncated characters are replaced by "..."), and padded with spaces to the left if
+   * necessary.
+   *
+   * @param s string to truncate or pad
+   * @param length goal length
+   * @return {@code s} truncated or padded to {@code length} characters
+   */
+  @SideEffectFree
+  public static String lpad(String s, @NonNegative int length) {
+    return lpad(s, length, ' ', true);
+  }
+
+  /**
+   * Returns a string of the specified length, truncated if necessary (in which case the last 3
+   * non-truncated characters are replaced by "..."), and padded with the given character to the
    * right if necessary.
    *
    * @param s string to truncate or pad
    * @param length goal length
-   * @return s truncated or padded to length characters
+   * @param c character to use for padding
+   * @param truncate if false, no truncation is done, only padding
+   * @return {@code s} truncated or padded to {@code length} characters
    */
   @SuppressWarnings({
     "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
     "lock:method.guarantee.violated" // side effect to local state
   })
   @SideEffectFree
-  public static String rpad(String s, @NonNegative int length) {
-    if (s.length() < length) {
+  public static String rpad(String s, @NonNegative int length, char c, boolean truncate) {
+    int sLength = s.length();
+    if (sLength == length) {
+      return s;
+    } else if (sLength < length) {
       StringBuilder buf = new StringBuilder(s);
-      for (int i = s.length(); i < length; i++) {
-        buf.append(' ');
+      for (int i = sLength; i < length; i++) {
+        buf.append(c);
       }
       return buf.toString();
     } else {
-      return s.substring(0, length);
+      if (truncate && length > 3) {
+        return s.substring(0, length - 3) + "...";
+      } else {
+        return s;
+      }
     }
+  }
+
+  /**
+   * Returns a string of the specified length, truncated if necessary (in which case the last 3
+   * non-truncated characters are replaced by "..."), and padded with the given character to the
+   * right if necessary.
+   *
+   * @param s string to truncate or pad
+   * @param length goal length
+   * @param c character to use for padding
+   * @return {@code s} truncated or padded to {@code length} characters
+   */
+  @SideEffectFree
+  public static String rpad(String s, @NonNegative int length, char c) {
+    return rpad(s, length, c, true);
+  }
+
+  /**
+   * Returns a string of the specified length, truncated if necessary (in which case the last 3
+   * non-truncated characters are replaced by "..."), and padded with spaces to the right if
+   * necessary.
+   *
+   * @param s string to truncate or pad
+   * @param length goal length
+   * @return {@code s} truncated or padded to {@code length} characters
+   */
+  @SideEffectFree
+  public static String rpad(String s, @NonNegative int length) {
+    return rpad(s, length, ' ');
   }
 
   /**
@@ -832,23 +1004,49 @@ public final class StringsPlume {
    *
    * @param num int whose string representation to truncate or pad
    * @param length goal length
-   * @return a string representation of num truncated or padded to length characters
+   * @return a string representation of {@code num} padded to {@code length} characters
    */
   @SideEffectFree
   public static String rpad(int num, @NonNegative int length) {
-    return rpad(String.valueOf(num), length);
+    return rpad(String.valueOf(num), length, ' ', /* truncate= */ false);
   }
 
   /**
-   * Converts the double to a String, then formats it using {@link #rpad(String,int)}.
+   * Converts the double to a String, then formats it using {@link #rpad(String,int)}. Does not do
+   * truncation that is after a decimal point.
    *
    * @param num double whose string representation to truncate or pad
    * @param length goal length
-   * @return a string representation of num truncated or padded to length characters
+   * @return a string representation of {@code num} padded to {@code length} characters
    */
+  @SuppressWarnings({
+    "lock:method.guarantee.violated", // side effect to local state
+    "allcheckers:purity.not.sideeffectfree.call"
+  }) // side effect to local state
   @SideEffectFree
   public static String rpad(double num, @NonNegative int length) {
-    return rpad(String.valueOf(num), length);
+    if (length == 0) {
+      throw new IllegalArgumentException(String.format("rpad(%s, %s)", num, length));
+    }
+    String numString = String.valueOf(num);
+    int dotIndex = numString.indexOf('.');
+    if (dotIndex >= length) {
+      return numString.substring(0, dotIndex);
+    } else if (dotIndex == length - 1) {
+      // Pad instead of having the last character in the output be the decimal period.
+      return numString.substring(0, dotIndex) + " ";
+    } else
+    // now: dotIndex < length - 1
+    if (length < numString.length()) {
+      return numString.substring(0, length);
+    } else {
+      // This is guaranteed to pad only, so inline rather than calling a method.
+      StringBuilder result = new StringBuilder(numString);
+      for (int i = numString.length(); i < length; i++) {
+        result.append(' ');
+      }
+      return result.toString();
+    }
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -867,6 +1065,7 @@ public final class StringsPlume {
     static final long serialVersionUID = 20150812L;
 
     /** Create a new NullableStringComparator. */
+    @SideEffectFree
     public NullableStringComparator() {}
 
     /**
@@ -980,7 +1179,7 @@ public final class StringsPlume {
     "lock:method.guarantee.violated" // side effect to local state
   })
   @SideEffectFree
-  public static ArrayList<Object> tokens(String str, String delim, boolean returnDelims) {
+  public static List<Object> tokens(String str, String delim, boolean returnDelims) {
     return CollectionsPlume.makeArrayList(new StringTokenizer(str, delim, returnDelims));
   }
 
@@ -997,7 +1196,7 @@ public final class StringsPlume {
     "lock:method.guarantee.violated" // side effect to local state
   })
   @SideEffectFree
-  public static ArrayList<Object> tokens(String str, String delim) {
+  public static List<Object> tokens(String str, String delim) {
     return CollectionsPlume.makeArrayList(new StringTokenizer(str, delim));
   }
 
@@ -1013,8 +1212,82 @@ public final class StringsPlume {
     "lock:method.guarantee.violated" // side effect to local state
   })
   @SideEffectFree
-  public static ArrayList<Object> tokens(String str) {
+  public static List<Object> tokens(String str) {
     return CollectionsPlume.makeArrayList(new StringTokenizer(str));
+  }
+
+  ///////////////////////////////////////////////////////////////////////////
+  /// Version numbers
+  ///
+
+  /** Matches a version number, of the form N.N or N.N.N, etc., where each N consists of digits. */
+  public static final @Regex String versionNumberRegex = "\\d+(\\.\\d+)+";
+
+  /** Matches a version number, of the form N.N or N.N.N, etc., where each N consists of digits. */
+  public static final Pattern versionNumberPattern = Pattern.compile("\\d+(\\.\\d+)+");
+
+  /**
+   * Returns true if the given text is a version number. It has the form N.N or N.N.N, etc., where
+   * each N consists of digits.
+   *
+   * @param text a string
+   * @return true if the given text is a version number
+   */
+  // "protected" to permit tests to access it.
+  public static boolean isVersionNumber(String text) {
+    return versionNumberPattern.matcher(text).matches();
+  }
+
+  /**
+   * A comparator that compares version numbers. It must only be invoked on strings that are version
+   * numbers.
+   */
+  public static class VersionNumberComparator implements Comparator<String> {
+
+    /** Creates a new VersionNumberComparator. */
+    public VersionNumberComparator() {}
+
+    @SuppressWarnings("StringSplitter") // OK given that the arguments are version numbers.
+    @Override
+    public int compare(String s1, String s2) {
+      if (s1.equals(s2)) {
+        return 0;
+      }
+      String[] components1 = s1.split("\\.");
+      String[] components2 = s2.split("\\.");
+      int len = Math.min(components1.length, components2.length);
+      for (int i = 0; i < len; i++) {
+        int int1 = Integer.valueOf(components1[i]);
+        int int2 = Integer.valueOf(components2[i]);
+        if (int1 < int2) {
+          return -1;
+        } else if (int1 > int2) {
+          return 1;
+        }
+      }
+      if (components1.length < components2.length) {
+        return -1;
+      } else {
+        assert components2.length < components1.length;
+        return 1;
+      }
+    }
+  }
+
+  /** A VersionNumberComparator. */
+  private static VersionNumberComparator vnc = new VersionNumberComparator();
+
+  /**
+   * Returns true if the first version number is less than or equal to the second version number.
+   *
+   * @param v1 a version number
+   * @param v2 a version number
+   * @return true if the given text is a version number
+   */
+  // "protected" to permit tests to access it.
+  public static boolean isVersionNumberLE(String v1, String v2) {
+    int compare = vnc.compare(v1, v2);
+    return compare <= 0;
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -1230,6 +1503,11 @@ public final class StringsPlume {
    * @param elements the elements of the conjunction or disjunction
    * @return a conjunction or disjunction string
    */
+  @SuppressWarnings({
+    "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
+    "lock:method.guarantee.violated" // needs JDK annotations
+  })
+  @SideEffectFree
   public static String conjunction(
       String conjunction, List<? extends @Signed @PolyNull Object> elements) {
     int size = elements.size();
@@ -1369,5 +1647,30 @@ public final class StringsPlume {
       }
     }
     return Math.max(maxIndex, result);
+  }
+
+  /**
+   * If the string representation of the given object is greater than the given length, truncate it
+   * to that length.
+   *
+   * @param o an object
+   * @param length the maximum length for the string representation; must be 6 or more
+   * @return the string representation of the object, no more than the given length
+   */
+  @SideEffectFree
+  public static String toStringTruncated(Object o, int length) {
+    if (length < 6) {
+      throw new IllegalArgumentException(
+          "toStringTruncated: length argument must be 6 or more, got " + length);
+    }
+    String result = o.toString();
+    if (result.length() <= length) {
+      return result;
+    } else {
+      // The quoting increases the likelihood that all delimiters are balanced in the result.
+      // That makes it easier to manipulate the result (such as skipping over it) in an
+      // editor.  The quoting also makes clear that the value is truncated.
+      return "\"" + result.substring(0, length - 5) + "...\"";
+    }
   }
 }

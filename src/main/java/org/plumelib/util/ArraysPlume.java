@@ -58,7 +58,7 @@ public final class ArraysPlume {
    * @param o the element to appear repeatedly in the returned array; must not be null
    * @return an array consisting of n copies of the specified object
    */
-  public static <T extends Object> T[] nCopies(@NonNegative int n, T o) {
+  public static <T extends @Signed Object> T[] nCopies(@NonNegative int n, T o) {
     @SuppressWarnings("unchecked")
     T[] result = (T[]) Array.newInstance(o.getClass(), n);
     Arrays.fill(result, o);
@@ -537,7 +537,8 @@ public final class ArraysPlume {
    * @see java.util.List#indexOf(java.lang.Object)
    */
   @Pure
-  public static <T extends @Nullable Object> int indexOf(T[] a, @Nullable Object elt) {
+  public static <T extends @Nullable Object> int indexOf(
+      @PolySigned T[] a, @Nullable @PolySigned Object elt) {
     if (elt == null) {
       return indexOfEq(a, elt);
     }
@@ -564,8 +565,8 @@ public final class ArraysPlume {
    */
   @Pure
   public static <T extends @Nullable Object> int indexOf(
-      T[] a,
-      @Nullable Object elt,
+      @PolySigned T[] a,
+      @Nullable @PolySigned Object elt,
       @IndexFor("#1") int minindex,
       @IndexOrHigh("#1") int indexlimit) {
     if (elt == null) {
@@ -590,7 +591,8 @@ public final class ArraysPlume {
    * @see java.util.List#indexOf(java.lang.Object)
    */
   @Pure
-  public static int indexOf(List<? extends @PolyNull Object> a, Object elt) {
+  public static int indexOf(
+      List<? extends @PolyNull @PolySigned Object> a, @PolySigned Object elt) {
     return a.indexOf(elt);
   }
 
@@ -608,8 +610,8 @@ public final class ArraysPlume {
    */
   @Pure
   public static int indexOf(
-      List<? extends @PolyNull Object> a,
-      @Nullable Object elt,
+      List<? extends @PolyNull @PolySigned Object> a,
+      @Nullable @PolySigned Object elt,
       @IndexFor("#1") @NonNegative int minindex,
       @IndexOrHigh("#1") int indexlimit) {
     if (elt == null) {
@@ -634,7 +636,7 @@ public final class ArraysPlume {
    * @see java.util.ArrayList#indexOf(java.lang.Object)
    */
   @Pure
-  public static int indexOfEq(@PolyNull Object[] a, @Nullable Object elt) {
+  public static int indexOfEq(@PolyNull @PolySigned Object[] a, @Nullable @PolySigned Object elt) {
     for (int i = 0; i < a.length; i++) {
       if (elt == a[i]) {
         return i;
@@ -657,8 +659,8 @@ public final class ArraysPlume {
    */
   @Pure
   public static int indexOfEq(
-      @PolyNull Object[] a,
-      @Nullable Object elt,
+      @PolyNull @PolySigned Object[] a,
+      @Nullable @PolySigned Object elt,
       @IndexFor("#1") int minindex,
       @IndexOrHigh("#1") int indexlimit) {
     for (int i = minindex; i < indexlimit; i++) {
@@ -680,7 +682,8 @@ public final class ArraysPlume {
    * @see java.util.ArrayList#indexOf(java.lang.Object)
    */
   @Pure
-  public static int indexOfEq(List<? extends @PolyNull Object> a, @Nullable Object elt) {
+  public static int indexOfEq(
+      List<? extends @PolyNull @PolySigned Object> a, @Nullable @PolySigned Object elt) {
     for (int i = 0; i < a.size(); i++) {
       if (elt == a.get(i)) {
         return i;
@@ -703,8 +706,8 @@ public final class ArraysPlume {
    */
   @Pure
   public static int indexOfEq(
-      List<? extends @PolyNull Object> a,
-      @Nullable Object elt,
+      List<? extends @PolyNull @PolySigned Object> a,
+      @Nullable @PolySigned Object elt,
       @IndexFor("#1") @NonNegative int minindex,
       @IndexOrHigh("#1") int indexlimit) {
     for (int i = minindex; i < indexlimit; i++) {
@@ -725,7 +728,7 @@ public final class ArraysPlume {
    * @see java.util.ArrayList#indexOf(java.lang.Object)
    */
   @Pure
-  public static int indexOf(int[] a, int elt) {
+  public static int indexOf(@PolySigned int[] a, @PolySigned int elt) {
     for (int i = 0; i < a.length; i++) {
       if (elt == a[i]) {
         return i;
@@ -744,7 +747,7 @@ public final class ArraysPlume {
    * @see java.util.ArrayList#indexOf(java.lang.Object)
    */
   @Pure
-  public static int indexOf(long[] a, long elt) {
+  public static int indexOf(@PolySigned long[] a, @PolySigned long elt) {
     for (int i = 0; i < a.length; i++) {
       if (elt == a[i]) {
         return i;
@@ -767,7 +770,10 @@ public final class ArraysPlume {
    */
   @Pure
   public static int indexOf(
-      int[] a, int elt, @IndexFor("#1") int minindex, @IndexOrHigh("#1") int indexlimit) {
+      @PolySigned int[] a,
+      @PolySigned int elt,
+      @IndexFor("#1") int minindex,
+      @IndexOrHigh("#1") int indexlimit) {
     for (int i = minindex; i < indexlimit; i++) {
       if (elt == a[i]) {
         return i;
@@ -790,7 +796,10 @@ public final class ArraysPlume {
    */
   @Pure
   public static int indexOf(
-      long[] a, long elt, @IndexFor("#1") int minindex, @IndexOrHigh("#1") int indexlimit) {
+      @PolySigned long[] a,
+      @PolySigned long elt,
+      @IndexFor("#1") int minindex,
+      @IndexOrHigh("#1") int indexlimit) {
     for (int i = minindex; i < indexlimit; i++) {
       if (elt == a[i]) {
         return i;
@@ -881,7 +890,7 @@ public final class ArraysPlume {
    * @see java.lang.String#indexOf(java.lang.String)
    */
   @Pure
-  public static int indexOf(@PolyNull Object[] a, @PolyNull Object[] sub) {
+  public static int indexOf(@PolyNull @PolySigned Object[] a, @PolyNull @PolySigned Object[] sub) {
     int aIndexMax = a.length - sub.length;
     for (int i = 0; i <= aIndexMax; i++) {
       if (isSubarray(a, sub, i)) {
@@ -907,7 +916,8 @@ public final class ArraysPlume {
   // be indexOfEq(@PolyNull(1) Object[], @PolyNull(2) Object[]), but the
   // @PolyNull qualifier does not yet take an argument.
   @Pure
-  public static int indexOfEq(@PolyNull Object[] a, @PolyNull Object[] sub) {
+  public static int indexOfEq(
+      @PolyNull @PolySigned Object[] a, @PolyNull @PolySigned Object[] sub) {
     int aIndexMax = a.length - sub.length;
     for (int i = 0; i <= aIndexMax; i++) {
       if (isSubarrayEq(a, sub, i)) {
@@ -944,6 +954,7 @@ public final class ArraysPlume {
    * Searches for the first subsequence of the list that matches the given array elementwise,
    * testing for equality using == (not the equals method).
    *
+   * @param <T> the type of list/array elements
    * @param a a list
    * @param sub subsequence to search for
    * @return the first index at which the second array starts in the first list, or -1 if the
@@ -952,7 +963,7 @@ public final class ArraysPlume {
    * @see java.lang.String#indexOf(java.lang.String)
    */
   @Pure
-  public static int indexOfEq(List<?> a, @PolyNull Object[] sub) {
+  public static <T> int indexOfEq(List<@PolySigned T> a, @PolyNull @PolySigned Object[] sub) {
     int aIndexMax = a.size() - sub.length;
     for (int i = 0; i <= aIndexMax; i++) {
       if (isSubarrayEq(a, sub, i)) {
@@ -989,6 +1000,7 @@ public final class ArraysPlume {
    * Searches for the first subsequence of the array that matches the given list elementwise,
    * testing for equality using == (not the equals method).
    *
+   * @param <T> the type of list/array elements
    * @param a an array
    * @param sub subsequence to search for
    * @return the first index at which the second list starts in the first array, or -1 if the
@@ -997,7 +1009,7 @@ public final class ArraysPlume {
    * @see java.lang.String#indexOf(java.lang.String)
    */
   @Pure
-  public static int indexOfEq(@PolyNull Object[] a, List<?> sub) {
+  public static <T> int indexOfEq(@PolyNull @PolySigned Object[] a, List<@PolySigned T> sub) {
     int aIndexMax = a.length - sub.size();
     for (int i = 0; i <= aIndexMax; i++) {
       if (isSubarrayEq(a, sub, i)) {
@@ -1011,6 +1023,7 @@ public final class ArraysPlume {
    * Searches for the first subsequence of the list that matches the given list elementwise, testing
    * for equality using the equals method.
    *
+   * @param <T> the type of list elements
    * @param a a list
    * @param sub subsequence to search for
    * @return the first index at which the second list starts in the first list, or -1 if no such
@@ -1019,7 +1032,7 @@ public final class ArraysPlume {
    * @see java.lang.String#indexOf(java.lang.String)
    */
   @Pure
-  public static int indexOf(List<?> a, List<?> sub) {
+  public static <T> int indexOf(List<T> a, List<T> sub) {
     int aIndexMax = a.size() - sub.size();
     for (int i = 0; i <= aIndexMax; i++) {
       if (isSubarray(a, sub, i)) {
@@ -1033,6 +1046,7 @@ public final class ArraysPlume {
    * Searches for the first subsequence of the list that matches the given list elementwise, testing
    * for equality using == (not the equals method).
    *
+   * @param <T> the type of list elements
    * @param a a list
    * @param sub subsequence to search for
    * @return the first index at which the second list starts in the first list, or -1 if the element
@@ -1041,7 +1055,7 @@ public final class ArraysPlume {
    * @see java.lang.String#indexOf(java.lang.String)
    */
   @Pure
-  public static int indexOfEq(List<?> a, List<?> sub) {
+  public static <T> int indexOfEq(List<T> a, List<T> sub) {
     int aIndexMax = a.size() - sub.size();
     for (int i = 0; i <= aIndexMax; i++) {
       if (isSubarrayEq(a, sub, i)) {
@@ -1062,7 +1076,7 @@ public final class ArraysPlume {
    * @see java.lang.String#indexOf(java.lang.String)
    */
   @Pure
-  public static int indexOf(int[] a, int[] sub) {
+  public static int indexOf(@PolySigned int[] a, @PolySigned int[] sub) {
     int aIndexMax = a.length - sub.length;
     for (int i = 0; i <= aIndexMax; i++) {
       if (isSubarray(a, sub, i)) {
@@ -1104,7 +1118,7 @@ public final class ArraysPlume {
    * @see java.lang.String#indexOf(java.lang.String)
    */
   @Pure
-  public static int indexOf(long[] a, long[] sub) {
+  public static int indexOf(@PolySigned long[] a, @PolySigned long[] sub) {
     int aIndexMax = a.length - sub.length;
     for (int i = 0; i <= aIndexMax; i++) {
       if (isSubarray(a, sub, i)) {
@@ -1162,11 +1176,11 @@ public final class ArraysPlume {
    *     whether it would be the last included index or the first non-included index)
    */
   @SideEffectFree
-  public static @PolyNull @PolyInterned Object[] subarray(
-      @PolyNull @PolyInterned Object[] a,
+  public static @PolyInterned @PolyNull Object[] subarray(
+      @PolyInterned @PolyNull Object[] a,
       @NonNegative int startindex,
       @NonNegative @LTLengthOf(value = "#1", offset = "#2 - 1") int length) {
-    @PolyNull @PolyInterned Object[] result = new @PolyNull @PolyInterned Object[length];
+    @PolyInterned @PolyNull Object[] result = new @PolyInterned @PolyNull Object[length];
     System.arraycopy(a, startindex, result, 0, length);
     return result;
   }
@@ -1197,11 +1211,11 @@ public final class ArraysPlume {
    * @return a subarray of the given array
    */
   @SideEffectFree
-  public static @PolyNull @PolyInterned String[] subarray(
-      @PolyNull @PolyInterned String[] a,
+  public static @PolyInterned @PolyNull String[] subarray(
+      @PolyInterned @PolyNull String[] a,
       @NonNegative int startindex,
       @NonNegative @LTLengthOf(value = "#1", offset = "#2 - 1") int length) {
-    @PolyNull @PolyInterned String[] result = new @PolyNull @PolyInterned String[length];
+    @PolyInterned @PolyNull String[] result = new @PolyInterned @PolyNull String[length];
     System.arraycopy(a, startindex, result, 0, length);
     return result;
   }
@@ -1400,7 +1414,9 @@ public final class ArraysPlume {
    */
   @Pure
   public static boolean isSubarrayEq(
-      @PolyNull Object[] a, @PolyNull Object[] sub, @NonNegative int aOffset) {
+      @PolyNull @PolySigned Object[] a,
+      @PolyNull @PolySigned Object[] sub,
+      @NonNegative int aOffset) {
     if (aOffset + sub.length > a.length) {
       return false;
     }
@@ -1442,6 +1458,7 @@ public final class ArraysPlume {
    * Determines whether the second array is a subarray of the first, starting at the specified index
    * of the first, testing for equality using == (not the equals method).
    *
+   * @param <T> the type of list/array elements
    * @param a an array
    * @param sub subsequence to search for
    * @param aOffset first index in {@code a} at which to search. Must be non-negative. The routine
@@ -1449,7 +1466,8 @@ public final class ArraysPlume {
    * @return true iff sub is a contiguous subarray of a
    */
   @Pure
-  public static boolean isSubarrayEq(@PolyNull Object[] a, List<?> sub, @NonNegative int aOffset) {
+  public static <T> boolean isSubarrayEq(
+      @PolyNull @PolySigned Object[] a, List<@PolySigned T> sub, @NonNegative int aOffset) {
     if (aOffset + sub.size() > a.length) {
       return false;
     }
@@ -1491,6 +1509,7 @@ public final class ArraysPlume {
    * Determines whether the second array is a subarray of the first, starting at the specified index
    * of the first, testing for equality using == (not the equals method).
    *
+   * @param <T> the type of list/array elements
    * @param a a list
    * @param sub subsequence to search for
    * @param aOffset first index in {@code a} at which to search. Must be non-negative. The routine
@@ -1498,7 +1517,8 @@ public final class ArraysPlume {
    * @return true iff sub is a contiguous subarray of a
    */
   @Pure
-  public static boolean isSubarrayEq(List<?> a, @PolyNull Object[] sub, @NonNegative int aOffset) {
+  public static <T> boolean isSubarrayEq(
+      List<@PolySigned T> a, @PolyNull @PolySigned Object[] sub, @NonNegative int aOffset) {
     if (aOffset + sub.length > a.size()) {
       return false;
     }
@@ -1514,6 +1534,7 @@ public final class ArraysPlume {
    * Determines whether the second array is a subarray of the first, starting at the specified index
    * of the first, testing for equality using the equals method.
    *
+   * @param <T> the type of list elements
    * @param a a list
    * @param sub subsequence to search for
    * @param aOffset first index in {@code a} at which to search. Must be non-negative. The routine
@@ -1521,7 +1542,7 @@ public final class ArraysPlume {
    * @return true iff sub is a contiguous subarray of a
    */
   @Pure
-  public static boolean isSubarray(List<?> a, List<?> sub, @NonNegative int aOffset) {
+  public static <T> boolean isSubarray(List<T> a, List<T> sub, @NonNegative int aOffset) {
     if (aOffset + sub.size() > a.size()) {
       return false;
     }
@@ -1537,6 +1558,7 @@ public final class ArraysPlume {
    * Determines whether the second array is a subarray of the first, starting at the specified index
    * of the first, testing for equality using == (not the equals method).
    *
+   * @param <T> the type of list elements
    * @param a a list
    * @param sub subsequence to search for
    * @param aOffset first index in {@code a} at which to search. Must be non-negative. The routine
@@ -1544,7 +1566,7 @@ public final class ArraysPlume {
    * @return true iff sub is a contiguous subarray of a
    */
   @Pure
-  public static boolean isSubarrayEq(List<?> a, List<?> sub, @NonNegative int aOffset) {
+  public static <T> boolean isSubarrayEq(List<T> a, List<T> sub, @NonNegative int aOffset) {
     if (aOffset + sub.size() > a.size()) {
       return false;
     }
@@ -1567,7 +1589,8 @@ public final class ArraysPlume {
    * @return true iff sub is a contiguous subarray of a
    */
   @Pure
-  public static boolean isSubarray(int[] a, int[] sub, @NonNegative int aOffset) {
+  public static boolean isSubarray(
+      @PolySigned int[] a, @PolySigned int[] sub, @NonNegative int aOffset) {
     if (aOffset + sub.length > a.length) {
       return false;
     }
@@ -1590,7 +1613,8 @@ public final class ArraysPlume {
    * @return true iff sub is a contiguous subarray of a
    */
   @Pure
-  public static boolean isSubarray(long[] a, long[] sub, @NonNegative int aOffset) {
+  public static boolean isSubarray(
+      @PolySigned long[] a, @PolySigned long[] sub, @NonNegative int aOffset) {
     if (aOffset + sub.length > a.length) {
       return false;
     }
@@ -1697,10 +1721,11 @@ public final class ArraysPlume {
    *
    * @param <T> the type of array or list elements
    */
-  private static class ListOrArray<T extends @MustCallUnknown @Nullable Object> {
+  private static class ListOrArray<T extends @Nullable Object> {
     // At most one field is non-null.  If both are null, this object represents the null value.
     /** The array that this object wraps, or null. */
     T @Nullable [] theArray = null;
+
     /** The list that this object wraps, or null. */
     @Nullable List<T> theList = null;
 
@@ -1964,9 +1989,9 @@ public final class ArraysPlume {
    * @param b the second array to concatenate
    * @return an array that concatenates the arguments
    */
-  public static @PolyNull @PolyInterned String[] concat(
-      @PolyNull @PolyInterned String @Nullable [] a,
-      @PolyNull @PolyInterned String @Nullable [] b) {
+  public static @PolyInterned @PolyNull String[] concat(
+      @PolyInterned @PolyNull String @Nullable [] a,
+      @PolyInterned @PolyNull String @Nullable [] b) {
     if (a == null || a.length == 0) {
       if (b == null) {
         return new String[0];
@@ -1977,7 +2002,7 @@ public final class ArraysPlume {
       if (b == null || b.length == 0) {
         return a;
       } else {
-        @PolyNull @PolyInterned String[] result = new String[a.length + b.length];
+        @PolyInterned @PolyNull String[] result = new String[a.length + b.length];
         System.arraycopy(a, 0, result, 0, a.length);
         System.arraycopy(b, 0, result, a.length, b.length);
         return result;
@@ -2401,7 +2426,7 @@ public final class ArraysPlume {
    */
   @SideEffectFree
   public static String toStringQuoted(
-      @MustCallUnknown @Nullable Collection<? extends @PolyMustCall @Signed @PolyNull Object> a) {
+      @MustCallUnknown @Nullable Collection<? extends @PolyMustCall @Signed @Nullable Object> a) {
     return toString(a, true);
   }
 
@@ -2414,9 +2439,22 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff the array is sorted
+   * @deprecated use {@link #isSorted(int[])}
    */
+  @Deprecated // 2024-04-21
   @Pure
   public static boolean sorted(int[] a) {
+    return isSorted(a);
+  }
+
+  /**
+   * Returns whether the array is sorted.
+   *
+   * @param a an array
+   * @return true iff the array is sorted
+   */
+  @Pure
+  public static boolean isSorted(int[] a) {
     for (int i = 0; i < a.length - 1; i++) {
       if (a[i + 1] < a[i]) {
         return false;
@@ -2430,9 +2468,21 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff the array is sorted
+   * @deprecated use {@link #isSorted(long[])}
+   */
+  @Deprecated // 2024-04-21
+  public static boolean sorted(long[] a) {
+    return isSorted(a);
+  }
+
+  /**
+   * Returns whether the array is sorted.
+   *
+   * @param a an array
+   * @return true iff the array is sorted
    */
   @Pure
-  public static boolean sorted(long[] a) {
+  public static boolean isSorted(long[] a) {
     for (int i = 0; i < a.length - 1; i++) {
       if (a[i + 1] < a[i]) {
         return false;
@@ -2500,9 +2550,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(boolean[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(boolean[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2533,9 +2601,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(byte[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(byte[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2566,9 +2652,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(char[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(char[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2599,9 +2703,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(float[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(float[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2632,9 +2754,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(short[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(short[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2665,9 +2805,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(int[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(int[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2699,9 +2857,28 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(double[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements. Equality checking uses {@link
+   * Double#equals}.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(double[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2732,9 +2909,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(long[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(long[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2765,9 +2960,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(String[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(String[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2798,9 +3011,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(Object[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(Object[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2812,7 +3043,7 @@ public final class ArraysPlume {
    * @param <T> the type of the elements
    * @param a a list
    * @return true iff a does not contain duplicate elements
-   * @deprecated use {@link CollectionsPlume#noDuplicates}
+   * @deprecated use {@link CollectionsPlume#hasNoDuplicates(List)}
    */
   @Deprecated // 2021-04-09
   @SuppressWarnings({"allcheckers:purity", "lock"}) // side effect to local state (HashSet)
@@ -2995,8 +3226,8 @@ public final class ArraysPlume {
    */
   @SuppressWarnings({"allcheckers:purity", "lock"}) // side effect to local state (HashSet)
   @Pure
-  public static boolean isSubset(long[] smaller, long[] bigger) {
-    Set<Long> setBigger = new HashSet<>();
+  public static boolean isSubset(@PolySigned long[] smaller, @PolySigned long[] bigger) {
+    Set<@PolySigned Long> setBigger = new HashSet<>();
 
     for (int i = 0; i < bigger.length; i++) {
       setBigger.add(bigger[i]);
@@ -3660,7 +3891,7 @@ public final class ArraysPlume {
    * @return true iff some element of a is null (false if a is zero-sized)
    */
   @Pure
-  public static boolean anyNull(@PolyNull Object[] a) {
+  public static boolean anyNull(@PolyNull @PolySigned Object[] a) {
     if (a.length == 0) {
       return false;
     }
@@ -3840,7 +4071,7 @@ public final class ArraysPlume {
      *
      * @return all the elements in any part of the Partitioning
      */
-    ArrayList<T> partitionedSet() {
+    List<T> partitionedSet() {
       ArrayList<T> result = new ArrayList<>();
       for (List<T> part : this) {
         result.addAll(part);
@@ -3856,7 +4087,7 @@ public final class ArraysPlume {
      */
     boolean isPartitioningFor(List<T> elts) {
       // Inefficient O(n^2) implementation.  We can do O(n log n) if desired.
-      ArrayList<T> ps = partitionedSet();
+      List<T> ps = partitionedSet();
       return ps.size() == elts.size() && ps.containsAll(elts);
     }
 
@@ -3888,6 +4119,7 @@ public final class ArraysPlume {
    * @param elt the element to put in the ArrayList
    * @return a singleton ArrayList containing {@code elt}
    */
+  @SuppressWarnings("NonApiType")
   private static <T> ArrayList<T> newArrayList(T elt) {
     ArrayList<T> result = new ArrayList<>(1);
     result.add(elt);
