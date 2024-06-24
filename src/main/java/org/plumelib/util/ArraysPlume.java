@@ -58,7 +58,7 @@ public final class ArraysPlume {
    * @param o the element to appear repeatedly in the returned array; must not be null
    * @return an array consisting of n copies of the specified object
    */
-  public static <T extends Object> T[] nCopies(@NonNegative int n, T o) {
+  public static <T extends @Signed Object> T[] nCopies(@NonNegative int n, T o) {
     @SuppressWarnings("unchecked")
     T[] result = (T[]) Array.newInstance(o.getClass(), n);
     Arrays.fill(result, o);
@@ -2426,7 +2426,7 @@ public final class ArraysPlume {
    */
   @SideEffectFree
   public static String toStringQuoted(
-      @MustCallUnknown @Nullable Collection<? extends @PolyMustCall @Signed @PolyNull Object> a) {
+      @MustCallUnknown @Nullable Collection<? extends @PolyMustCall @Signed @Nullable Object> a) {
     return toString(a, true);
   }
 
@@ -2439,9 +2439,22 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff the array is sorted
+   * @deprecated use {@link #isSorted(int[])}
    */
+  @Deprecated // 2024-04-21
   @Pure
   public static boolean sorted(int[] a) {
+    return isSorted(a);
+  }
+
+  /**
+   * Returns whether the array is sorted.
+   *
+   * @param a an array
+   * @return true iff the array is sorted
+   */
+  @Pure
+  public static boolean isSorted(int[] a) {
     for (int i = 0; i < a.length - 1; i++) {
       if (a[i + 1] < a[i]) {
         return false;
@@ -2455,9 +2468,21 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff the array is sorted
+   * @deprecated use {@link #isSorted(long[])}
+   */
+  @Deprecated // 2024-04-21
+  public static boolean sorted(long[] a) {
+    return isSorted(a);
+  }
+
+  /**
+   * Returns whether the array is sorted.
+   *
+   * @param a an array
+   * @return true iff the array is sorted
    */
   @Pure
-  public static boolean sorted(long[] a) {
+  public static boolean isSorted(long[] a) {
     for (int i = 0; i < a.length - 1; i++) {
       if (a[i + 1] < a[i]) {
         return false;
@@ -2525,9 +2550,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(boolean[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(boolean[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2558,9 +2601,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(byte[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(byte[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2591,9 +2652,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(char[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(char[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2624,9 +2703,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(float[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(float[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2657,9 +2754,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(short[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(short[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2690,9 +2805,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(int[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(int[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2724,9 +2857,28 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(double[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements. Equality checking uses {@link
+   * Double#equals}.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(double[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2757,9 +2909,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(long[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(long[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2790,9 +2960,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(String[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(String[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2823,9 +3011,27 @@ public final class ArraysPlume {
    *
    * @param a an array
    * @return true iff a does not contain duplicate elements
+   * @deprecated use {@code hasNoDuplicates}
    */
+  @Deprecated // 2023-12-01
+  // @InlineMe(
+  //     replacement = "!ArraysPlume.hasDuplicates(a)",
+  //     imports = "org.plumelib.util.ArraysPlume")
   @Pure
   public static boolean noDuplicates(Object[] a) {
+    return !hasDuplicates(a);
+  }
+
+  /**
+   * Returns true iff a does not contain duplicate elements.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param a an array
+   * @return true iff a does not contain duplicate elements
+   */
+  @Pure
+  public static boolean hasNoDuplicates(Object[] a) {
     return !hasDuplicates(a);
   }
 
@@ -2837,7 +3043,7 @@ public final class ArraysPlume {
    * @param <T> the type of the elements
    * @param a a list
    * @return true iff a does not contain duplicate elements
-   * @deprecated use {@link CollectionsPlume#noDuplicates}
+   * @deprecated use {@link CollectionsPlume#hasNoDuplicates(List)}
    */
   @Deprecated // 2021-04-09
   @SuppressWarnings({"allcheckers:purity", "lock"}) // side effect to local state (HashSet)

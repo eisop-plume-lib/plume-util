@@ -1,12 +1,64 @@
 # Plume-Util change log
 
-## 1.9.0 (????-??-??)
+## 2.0.0 (????-??-??)
 
-- Require Java 11
-- `StringsPlume`: add `rpad` that pads with an arbitrary character
+- Require Java 11.
+- Renamed `*Plume` classes to `*P`, for brevity; for example, use `CollectionsP` instead of `CollectionsPlume`.
+- Removed all deprecated classes and mehods.
+
+## 1.10.0 (2024-??-??)
+
+- `OrderedPairIterator`: uses `IPair` instead of `MPair`
+- `ArraysPlume`:  deprecated `sorted()` in favor of `isSorted()`
+- `StringsPlume`:
+    * `firstLineSeparator()` can return null
+    * new method `isVersionNumberLE()`
+    * new class `VersionNumberComparator`
+- `CollectionsPlume`:  new methods `anyMatch()`, `allMatch()`, `noneMatch`
+
+## 1.9.3 (2024-04-19)
+
+- `CollectionsPlume`:
+    * deprecated `Filter`; use `java.util.function.Predicate` instead
+    * new method `replace(Collection<T> c, Collection<Replacement<T>> replacements)`
+    * new method `isSubsequenceMaybeNonContiguous(Iterable<T>, Iterable<T>)`
+- `StringsPlume`:
+    * new methods `splitRetainSeparators()` and `splitLinesRetainSeparators()`
+- `FilesPlume`:
+    * deprecate `fileContents()` in favor of new method `readString()`
+    * deprecate `writeFile()` in favor of new method `writeString()`
+    * new method `readLinesRetainingSeparators()`
+    * new method `writeString(Path, String)`
+
+## 1.9.2 (2024-04-07)
+
+- Don't use `@InlineMe`, which breaks javac in some clients.
+
+## 1.9.1 (2024-04-06)
+
+- `FilesPlume`:
+    * deprecate `readFile()` in favor of `fileContents()`
+- `StringsPlume`:
+   * new method `firstLineSeparator(String)`
+   * improved behavior of `splitLines(String)`
+- `CollectionsPlume`:
+   * new method `indexOf(list, value, startIndex)`
+
+## 1.9.0 (2023-12-08)
+
+- `StringsPlume`:
+    * `rpad` and `lpad` add an ellipsis ("...") if it truncates
+    * `rpad(double, ...)` does not truncate values before the decimal point
+    * add `rpad` that pads with an arbitrary character
+    * add `rpad` that never truncates
+    * add `lpad` that never truncates
 - `CollectionsPlume`:
    * add methods `duplicates()` and `listFilter()`
    * add an overload for `mapCapacity()`
+   * deprecated `noDuplicates()`; use `hasNoDuplicates()` instead
+   * deprecated `listFilter()`; use `filter()` instead
+- `ArraysPlume`:
+   * deprecated `noDuplicates()`; use `hasNoDuplicates()` instead
 
 ## 1.8.1 (2023-06-02)
 
