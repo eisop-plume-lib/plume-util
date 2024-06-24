@@ -7,9 +7,11 @@ import java.util.NoSuchElementException;
 import java.util.Set;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.lock.qual.GuardSatisfied;
+import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.checker.signedness.qual.PolySigned;
+import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.checker.signedness.qual.UnknownSignedness;
 import org.checkerframework.dataflow.qual.SideEffectFree;
 
@@ -24,7 +26,7 @@ import org.checkerframework.dataflow.qual.SideEffectFree;
  *
  * @param <T> the type of elements of the set
  */
-public abstract class AbstractMostlySingletonSet<T extends Object> implements Set<T> {
+public abstract class AbstractMostlySingletonSet<T extends @Signed Object> implements Set<T> {
 
   /** The possible states of this set. */
   public enum State {
@@ -38,8 +40,10 @@ public abstract class AbstractMostlySingletonSet<T extends Object> implements Se
 
   /** The current state. */
   protected State state;
+
   /** The current value, non-null when the state is SINGLETON. */
   protected @Nullable T value;
+
   /** The wrapped set, non-null when the state is ANY. */
   protected @Nullable Set<T> set;
 
@@ -168,8 +172,9 @@ public abstract class AbstractMostlySingletonSet<T extends Object> implements Se
     throw new UnsupportedOperationException();
   }
 
+  @SuppressWarnings({"nullness:unneeded.suppression", "keyfor:override.return"}) // temporary
   @Override
-  public <S> @Nullable S[] toArray(@PolyNull S[] a) {
+  public <@KeyForBottom S> @Nullable S[] toArray(@PolyNull S[] a) {
     throw new UnsupportedOperationException();
   }
 

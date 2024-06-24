@@ -10,9 +10,9 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +25,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.lock.qual.GuardSatisfied;
@@ -54,22 +55,7 @@ public final class CollectionsPlume {
   ///
 
   /**
-   * Returns the sorted version of the list. Does not alter the list. Simply calls {@code
-   * Collections.sort(List<T>, Comparator<? super T>)}.
-   *
-   * @return a sorted version of the list
-   * @param <T> type of elements of the list
-   * @param l a list to sort
-   * @param c a sorted version of the list
-   */
-  public static <T> List<T> sortList(List<T> l, Comparator<@MustCallUnknown ? super T> c) {
-    List<T> result = new ArrayList<>(l);
-    Collections.sort(result, c);
-    return result;
-  }
-
-  /**
-   * Returns true iff the list does not contain duplicate elements.
+   * Returns true iff the list does not contain duplicate elements, according to {@code equals()}.
    *
    * <p>The implementation uses O(n) time and O(n) space.
    *
@@ -99,7 +85,7 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Returns true iff the list does not contain duplicate elements.
+   * Returns true iff the list does not contain duplicate elements, according to {@code equals()}.
    *
    * <p>The implementation uses O(n) time and O(n) space.
    *
@@ -108,13 +94,32 @@ public final class CollectionsPlume {
    * @return true iff a does not contain duplicate elements
    */
   @Pure
-  public static <T> boolean noDuplicates(List<T> a) {
+  public static <T> boolean hasNoDuplicates(List<T> a) {
     return !hasDuplicates(a);
   }
 
   /**
-   * Returns a copy of the list (never the original list) with duplicates removed, but retaining the
-   * original order.
+   * Returns true iff the list does not contain duplicate elements, according to {@code equals()}.
+   *
+   * <p>The implementation uses O(n) time and O(n) space.
+   *
+   * @param <T> the type of the elements
+   * @param a a list
+   * @return true iff a does not contain duplicate elements
+   * @deprecated use {@link #hasNoDuplicates(List)}
+   */
+  @Deprecated // 2023-11-30
+  // @InlineMe(
+  //     replacement = "CollectionsPlume.hasNoDuplicates(a)",
+  //     imports = "org.plumelib.util.CollectionsPlume")
+  @Pure
+  public static <T> boolean noDuplicates(List<T> a) {
+    return hasNoDuplicates(a);
+  }
+
+  /**
+   * Returns a copy of the list (never the original list) with duplicates (according to {@code
+   * equals()}) removed, but retaining the original order. The argument is not modified.
    *
    * @param <T> type of elements of the list
    * @param l a list to remove duplicates from
@@ -129,9 +134,9 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Returns a copy of the list with duplicates removed, but retaining the original order. May
-   * return its argument if its argument has no duplicates, but is not guaranteed to do so. The
-   * argument is not modified.
+   * Returns a copy of the list with duplicates (according to {@code equals()}) removed, but
+   * retaining the original order. May return its argument if its argument has no duplicates, but is
+   * not guaranteed to do so. The argument is not modified.
    *
    * <p>If the element type implements {@link Comparable}, use {@link #withoutDuplicatesSorted} or
    * {@link #withoutDuplicatesComparable}.
@@ -150,9 +155,9 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Returns a list with the same contents as its argument, but sorted and without duplicates. May
-   * return its argument if its argument is sorted and has no duplicates, but is not guaranteed to
-   * do so. The argument is not modified.
+   * Returns a list with the same contents as its argument, but sorted and without duplicates
+   * (according to {@code equals()}). May return its argument if its argument is sorted and has no
+   * duplicates, but is not guaranteed to do so. The argument is not modified.
    *
    * <p>This is like {@link #withoutDuplicates}, but requires the list elements to implement {@link
    * Comparable}, and thus can be more efficient.
@@ -201,6 +206,22 @@ public final class CollectionsPlume {
     } else {
       return new ArrayList<>(set);
     }
+  }
+
+  /**
+   * Returns the sorted version of the list. Does not alter the list. Simply calls {@code
+   * Collections.sort(List<T>, Comparator<? super T>)} on a copy.
+   *
+   * @return a sorted version of the list
+   * @param <T> type of elements of the list
+   * @param l a list to sort; is not side-effected
+   * @param c a sorted version of the list
+   */
+  // TODO: rename to "sorted()".
+  public static <T> List<T> sortList(List<T> l, Comparator<@MustCallUnknown ? super T> c) {
+    List<T> result = new ArrayList<>(l);
+    Collections.sort(result, c);
+    return result;
   }
 
   /**
@@ -273,6 +294,24 @@ public final class CollectionsPlume {
     }
   }
 
+  /**
+   * Returns the elements (once each) that appear more than once in the given collection.
+   *
+   * @param <T> the type of elements
+   * @param c a collection
+   * @return the elements (once each) that appear more than once in the given collection
+   */
+  public static <T> Collection<T> duplicates(Collection<T> c) {
+    Set<T> withoutDuplicates = new HashSet<>();
+    Set<T> duplicates = new LinkedHashSet<>();
+    for (T elt : c) {
+      if (!withoutDuplicates.add(elt)) {
+        duplicates.add(elt);
+      }
+    }
+    return duplicates;
+  }
+
   /** All calls to deepEquals that are currently underway. */
   private static HashSet<WeakIdentityPair<Object, Object>> deepEqualsUnderway =
       new HashSet<WeakIdentityPair<Object, Object>>();
@@ -332,7 +371,7 @@ public final class CollectionsPlume {
       return Arrays.equals((short[]) o1, (short[]) o2);
     }
 
-    WeakIdentityPair<Object, Object> mypair = new WeakIdentityPair<>(o1, o2);
+    WeakIdentityPair<Object, Object> mypair = WeakIdentityPair.of(o1, o2);
     if (deepEqualsUnderway.contains(mypair)) {
       return true;
     }
@@ -367,9 +406,19 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Applies the function to each element of the given iterable, producing a list of the results.
+   * Applies the function to each element of the given iterable, producing a new list of the
+   * results. The point of this method is to make mapping operations more concise. You can write
    *
-   * <p>The point of this method is to make mapping operations more concise. Import it with
+   * <pre>{@code   return mapList(LemmaAnnotation::get, tokens);}</pre>
+   *
+   * instead of
+   *
+   * <pre>{@code   return tokens
+   *            .stream()
+   *            .map(LemmaAnnotation::get)
+   *            .collect(Collectors.toList());}</pre>
+   *
+   * Import this method with
    *
    * <pre>import static org.plumelib.util.CollectionsPlume.mapList;</pre>
    *
@@ -384,11 +433,9 @@ public final class CollectionsPlume {
    * @return a list of the results of applying {@code f} to the elements of {@code iterable}
    */
   public static <
-          @KeyForBottom FROM extends @Nullable @UnknownKeyFor @MustCallUnknown Object,
-          @KeyForBottom TO extends @Nullable @UnknownKeyFor @MustCallUnknown Object>
-      List<TO> mapList(
-          @MustCallUnknown Function<@MustCallUnknown ? super FROM, ? extends TO> f,
-          Iterable<FROM> iterable) {
+          @KeyForBottom FROM extends @Nullable @UnknownKeyFor Object,
+          @KeyForBottom TO extends @Nullable @UnknownKeyFor Object>
+      List<TO> mapList(Function<? super FROM, ? extends TO> f, Iterable<FROM> iterable) {
     List<TO> result;
 
     if (iterable instanceof RandomAccess) {
@@ -423,6 +470,8 @@ public final class CollectionsPlume {
    *
    * <pre>import static org.plumelib.util.CollectionsPlume.mapList;</pre>
    *
+   * This method is just like {@link #transform}, but with the arguments in the other order.
+   *
    * @param <FROM> the type of elements of the given array
    * @param <TO> the type of elements of the result list
    * @param f a function
@@ -443,11 +492,19 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Applies the function to each element of the given iterable, producing a list of the results.
-   * This is just like {@link #mapList(Function, Iterable)}, but with the arguments in the opposite
-   * order.
+   * Applies the function to each element of the given iterable, producing a new list of the
+   * results. The point of this method is to make mapping operations more concise. You can write
    *
-   * <p>The point of this method is to make mapping operations more concise. Import it with
+   * <pre>{@code   return transform(tokens, LemmaAnnotation::get);}</pre>
+   *
+   * instead of
+   *
+   * <pre>{@code   return tokens
+   *            .stream()
+   *            .map(LemmaAnnotation::get)
+   *            .collect(Collectors.toList());}</pre>
+   *
+   * Import this method with
    *
    * <pre>import static org.plumelib.util.CollectionsPlume.transform;</pre>
    *
@@ -466,6 +523,314 @@ public final class CollectionsPlume {
       List<TO> transform(
           Iterable<FROM> iterable, Function<@MustCallUnknown ? super FROM, ? extends TO> f) {
     return mapList(f, iterable);
+  }
+
+  /**
+   * Returns a copy of {@code orig}, where each element of the result is a clone of the
+   * corresponding element of {@code orig}.
+   *
+   * @param <T> the type of elements of the collection
+   * @param <C> the type of the collection
+   * @param orig a collection
+   * @return a copy of {@code orig}, as described above
+   */
+  @SuppressWarnings({
+    "signedness", // problem with clone()
+    "nullness" // generics problem
+  })
+  public static <T extends @Nullable Object, C extends @Nullable Collection<T>> @PolyNull C cloneElements(@PolyNull C orig) {
+    if (orig == null) {
+      return null;
+    }
+    C result = UtilPlume.clone(orig);
+    result.clear();
+    for (T elt : orig) {
+      result.add(UtilPlume.clone(elt));
+    }
+    return result;
+  }
+
+  // A "deep copy" uses the deepCopy() method of the DeepCopyable interface.
+
+  /**
+   * Returns a copy of {@code orig}, where each element of the result is a deep copy (according to
+   * the {@code DeepCopyable} interface) of the corresponding element of {@code orig}.
+   *
+   * @param <T> the type of elements of the collection
+   * @param <C> the type of the collection
+   * @param orig a collection
+   * @return a copy of {@code orig}, as described above
+   */
+  @SuppressWarnings({"signedness", "nullness:argument"}) // problem with clone()
+  public static <T extends @Nullable DeepCopyable<T>, C extends @Nullable Collection<T>> @PolyNull C deepCopy(@PolyNull C orig) {
+    if (orig == null) {
+      return null;
+    }
+    C result = UtilPlume.clone(orig);
+    result.clear();
+    for (T elt : orig) {
+      result.add(DeepCopyable.deepCopyOrNull(elt));
+    }
+    return result;
+  }
+
+  /**
+   * Returns a new list containing only the elements for which the filter returns true. To modify
+   * the collection in place, use {@code Collection#removeIf} instead of this method.
+   *
+   * <p>Using streams gives an equivalent list but is less efficient and more verbose:
+   *
+   * <pre>{@code
+   * coll.stream().filter(filter).collect(Collectors.toList());
+   * }</pre>
+   *
+   * @param <T> the type of elements
+   * @param coll a collection
+   * @param filter a predicate
+   * @return a new list with the elements for which the filter returns true
+   * @deprecated use {@link #filter} instead
+   */
+  @Deprecated // 2023-11-30
+  // @InlineMe(
+  //     replacement = "CollectionsPlume.filter(coll, filter)",
+  //     imports = "org.plumelib.util.CollectionsPlume")
+  public static <T> List<T> listFilter(Iterable<T> coll, Predicate<? super T> filter) {
+    return filter(coll, filter);
+  }
+
+  // TODO: This should return a collection of the same type as the input.  Currently it always
+  // returns a list.
+  /**
+   * Returns a new list containing only the elements for which the filter returns true. To modify
+   * the collection in place, use {@code Collection#removeIf} instead of this method.
+   *
+   * <p>Using streams gives an equivalent list but is less efficient and more verbose:
+   *
+   * <pre>{@code
+   * coll.stream().filter(filter).collect(Collectors.toList());
+   * }</pre>
+   *
+   * @param <T> the type of elements
+   * @param coll a collection
+   * @param filter a predicate
+   * @return a new list with the elements for which the filter returns true
+   */
+  public static <T> List<T> filter(Iterable<T> coll, Predicate<? super T> filter) {
+    List<T> result = new ArrayList<>();
+    for (T elt : coll) {
+      if (filter.test(elt)) {
+        result.add(elt);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Returns true if any element of the collection matches the predicate.
+   *
+   * <p>Using streams gives an equivalent result but is less efficient:
+   *
+   * <pre>{@code
+   * coll.stream().anyMatch(predicate);
+   * }</pre>
+   *
+   * @param <T> the type of elements
+   * @param coll a collection
+   * @param predicate a non-interfering, stateless predicate
+   * @return true if any element of the collection matches the predicate
+   */
+  public static <T> boolean anyMatch(Iterable<T> coll, Predicate<? super T> predicate) {
+    for (T elt : coll) {
+      if (predicate.test(elt)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Returns true if all elements of the collection match the predicate.
+   *
+   * <p>Using streams gives an equivalent result but is less efficient:
+   *
+   * <pre>{@code
+   * coll.stream().allMatch(predicate);
+   * }</pre>
+   *
+   * @param <T> the type of elements
+   * @param coll a collection
+   * @param predicate a non-interfering, stateless predicate
+   * @return true if all elements of the collection match the predicate
+   */
+  public static <T> boolean allMatch(Iterable<T> coll, Predicate<? super T> predicate) {
+    for (T elt : coll) {
+      if (!predicate.test(elt)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Returns true if no element of the collection matches the predicate.
+   *
+   * <p>Using streams gives an equivalent result but is less efficient:
+   *
+   * <pre>{@code
+   * coll.stream().noneMatch(predicate);
+   * }</pre>
+   *
+   * @param <T> the type of elements
+   * @param coll a collection
+   * @param predicate a non-interfering, stateless predicate
+   * @return true if no element of the collection matches the predicate
+   */
+  public static <T> boolean noneMatch(Iterable<T> coll, Predicate<? super T> predicate) {
+    for (T elt : coll) {
+      if (predicate.test(elt)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Returns the first index of the given value in the list, starting at the given index. Uses
+   * {@code Object.equals()} for comparison.
+   *
+   * @param list a list
+   * @param value the value to search for
+   * @param start the starting index
+   * @return the index of the value in the list, at or after the given index
+   */
+  public static int indexOf(List<?> list, Object value, int start) {
+    int idx = list.subList(start, list.size()).indexOf(value);
+    return idx == -1 ? -1 : idx + start;
+  }
+
+  /**
+   * Represents a replacement of one range of a collection by another collection.
+   *
+   * @param <T> the type of collection elements
+   */
+  public static class Replacement<T> {
+    /** The first line to replace, inclusive. */
+    public final int start;
+
+    /** The last line to replace, <em>inclusive</em>. May be equal to {@code start}-1. */
+    public final int end;
+
+    /** The new (replacement) elements. */
+    final Collection<T> elements;
+
+    /**
+     * Creates a new Replacement.
+     *
+     * @param start the first line to replace, inclusive
+     * @param end the last line to replace, exclusive
+     * @param elements the new (replacement) elements
+     */
+    private Replacement(int start, int end, Collection<T> elements) {
+      this.start = start;
+      this.end = end;
+      this.elements = elements;
+      if (end < start - 1) {
+        throw new Error("Invalid <start,end> pair: " + this);
+      }
+    }
+
+    /**
+     * Creates a new Replacement.
+     *
+     * @param <T> the type of elements of the list
+     * @param start the first line to replace, inclusive
+     * @param end the last line to replace, exclusive
+     * @param elements the new (replacement) elements
+     * @return a new Replacement
+     */
+    public static <T> Replacement<T> of(int start, int end, Collection<T> elements) {
+      return new Replacement<T>(start, end, elements);
+    }
+
+    @Override
+    public String toString(@GuardSatisfied Replacement<T> this) {
+      return "Replacement{" + start + ", " + end + ", " + elements + "}";
+    }
+  }
+
+  /**
+   * Performs a set of replacements on the given collection, returning the transformed result (as a
+   * list).
+   *
+   * @param <T> the type of collection elements
+   * @param c a collection
+   * @param replacements the replacements to perform on the collection, in order from the beginning
+   *     of the collection to the end
+   * @return the transformed collection, as a new list (even if no changes were made)
+   */
+  public static <T> List<T> replace(Iterable<T> c, Iterable<Replacement<T>> replacements) {
+    List<T> result = new ArrayList<>();
+    Iterator<T> cItor = c.iterator();
+    int cIndex = -1; // the index into c
+    Iterator<Replacement<T>> replacementItor = replacements.iterator();
+    while (replacementItor.hasNext()) {
+      Replacement<T> replacement = replacementItor.next();
+      while (cIndex < replacement.start - 1) {
+        result.add(cItor.next());
+        cIndex++;
+      }
+      result.addAll(replacement.elements);
+      while (cIndex < replacement.end) {
+        cItor.next();
+        cIndex++;
+      }
+    }
+    while (cItor.hasNext()) {
+      result.add(cItor.next());
+    }
+    return result;
+  }
+
+  /**
+   * Performs a set of replacements on the given array, returning the transformed result (as a
+   * list).
+   *
+   * @param <T> the type of collection elements
+   * @param c an array
+   * @param replacements the replacements to perform on the arary, in order from the beginning of
+   *     the list to the end
+   * @return the transformed collection, as a list
+   */
+  public static <T> List<T> replace(T[] c, Collection<Replacement<T>> replacements) {
+    return replace(Arrays.asList(c), replacements);
+  }
+
+  /**
+   * Returns true if the second list is a subsequence (not necessarily contiguous) of the first.
+   *
+   * @param <T> the type of elements of the list
+   * @param longer a list
+   * @param shorter a list
+   * @return true if the second list is a subsequence (not necessarily contiguous) of the first
+   */
+  // TODO: This could take as input a RandomAccess.
+  @SuppressWarnings("signedness")
+  public static <T> boolean isSubsequenceMaybeNonContiguous(
+      Iterable<T> longer, Iterable<T> shorter) {
+    Iterator<T> itorLonger = longer.iterator();
+    Iterator<T> itorShorter = shorter.iterator();
+    outerLoop:
+    while (itorShorter.hasNext()) {
+      T eltShorter = itorShorter.next();
+      while (itorLonger.hasNext()) {
+        T eltLonger = itorLonger.next();
+        if (Objects.equals(eltShorter, eltLonger)) {
+          continue outerLoop;
+        }
+      }
+      return false;
+    }
+    return true;
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -586,7 +951,7 @@ public final class CollectionsPlume {
    * @param e an enumeration to convert to a ArrayList
    * @return a vector containing the elements of the enumeration
    */
-  @SuppressWarnings("JdkObsolete")
+  @SuppressWarnings({"JdkObsolete", "NonApiType"})
   public static <T> ArrayList<T> makeArrayList(Enumeration<T> e) {
     ArrayList<T> result = new ArrayList<>();
     while (e.hasMoreElements()) {
@@ -752,6 +1117,7 @@ public final class CollectionsPlume {
    * @param cnt maximum element value
    * @return list of lists of length arity, each of which combines integers from start to cnt
    */
+  @SuppressWarnings("NonApiType")
   public static ArrayList<ArrayList<Integer>> createCombinations(
       int arity, @NonNegative int start, int cnt) {
 
@@ -779,46 +1145,6 @@ public final class CollectionsPlume {
     }
 
     return results;
-  }
-
-  /**
-   * Returns a copy of {@code orig}, where each element of the result is a clone of the
-   * corresponding element of {@code orig}.
-   *
-   * @param <T> the type of elements of the list
-   * @param orig a list
-   * @return a deep copy of {@code orig}
-   */
-  @SuppressWarnings("signedness") // problem with UtilPlume.clone()
-  public static <@Nullable T> @PolyNull List<T> deepCopy(@PolyNull List<T> orig) {
-    if (orig == null) {
-      return null;
-    }
-    List<T> result = new ArrayList<>(orig.size());
-    for (T elt : orig) {
-      result.add(UtilPlume.clone(elt));
-    }
-    return result;
-  }
-
-  /**
-   * Returns a copy of {@code orig}, where each element of the result is a clone of the
-   * corresponding element of {@code orig}.
-   *
-   * @param <T> the type of elements of the list
-   * @param orig a list
-   * @return a deep copy of {@code orig}
-   */
-  @SuppressWarnings("signedness") // problem with UtilPlume.clone()
-  public static <@Nullable T> @PolyNull TreeSet<T> deepCopy(@PolyNull TreeSet<T> orig) {
-    if (orig == null) {
-      return null;
-    }
-    TreeSet<T> result = new TreeSet<>(orig.comparator());
-    for (T elt : orig) {
-      result.add(UtilPlume.clone(elt));
-    }
-    return result;
   }
 
   ///////////////////////////////////////////////////////////////////////////
@@ -934,6 +1260,7 @@ public final class CollectionsPlume {
   public static final class MergedIterator2<T> implements Iterator<T> {
     /** The first of the two iterators that this object merges. */
     Iterator<T> itor1;
+
     /** The second of the two iterators that this object merges. */
     Iterator<T> itor2;
 
@@ -1020,25 +1347,26 @@ public final class CollectionsPlume {
   }
 
   /**
-   * An iterator that only returns elements that match the given Filter.
+   * An iterator that only returns elements that match the given predicate.
    *
    * @param <T> the type of elements of the iterator
    */
   public static final class FilteredIterator<T extends @Nullable Object> implements Iterator<T> {
     /** The iterator that this object is filtering. */
     Iterator<T> itor;
+
     /** The predicate that determines which elements to retain. */
-    Filter<T> filter;
+    Predicate<T> predicate;
 
     /**
-     * Create an iterator that only returns elements of {@code itor} that match the given Filter.
+     * Create an iterator that only returns elements of {@code itor} that match the given predicate.
      *
      * @param itor the Iterator to filter
-     * @param filter the predicate that determines which elements to retain
+     * @param predicate the predicate that determines which elements to retain
      */
-    public FilteredIterator(Iterator<T> itor, Filter<T> filter) {
+    public FilteredIterator(Iterator<T> itor, Predicate<T> predicate) {
       this.itor = itor;
-      this.filter = filter;
+      this.predicate = predicate;
     }
 
     /** A marker object, distinct from any object that the iterator can return. */
@@ -1050,6 +1378,7 @@ public final class CollectionsPlume {
      * is false.
      */
     T current = invalidT;
+
     /** True iff {@link #current} is an object from the wrapped iterator. */
     boolean currentValid = false;
 
@@ -1061,7 +1390,7 @@ public final class CollectionsPlume {
     public boolean hasNext(@GuardSatisfied FilteredIterator<T> this) {
       while (!currentValid && itor.hasNext()) {
         current = itor.next();
-        currentValid = filter.accept(current);
+        currentValid = predicate.test(current);
       }
       return currentValid;
     }
@@ -1094,14 +1423,17 @@ public final class CollectionsPlume {
   public static final class RemoveFirstAndLastIterator<T> implements Iterator<T> {
     /** The wrapped iterator. */
     Iterator<T> itor;
+
     /** A marker object, distinct from any object that the iterator can return. */
     @SuppressWarnings("unchecked")
     T nothing = (T) new Object();
+
     // I don't think this works, because the iterator might itself return null
     // @Nullable T nothing = (@Nullable T) null;
 
     /** The first object yielded by the wrapped iterator. */
     T first = nothing;
+
     /** The next object that this iterator will return. */
     T current = nothing;
 
@@ -1321,8 +1653,8 @@ public final class CollectionsPlume {
    * @param m a map whose keyset will be sorted
    * @return a sorted version of m.keySet()
    */
-  public static <K extends Comparable<@MustCallUnknown ? super K>, V>
-      Collection<@KeyFor("#1") K> sortedKeySet(Map<K, V> m) {
+  public static <K extends Comparable<? super K>, V> Collection<@KeyFor("#1") K> sortedKeySet(
+      Map<K, V> m) {
     ArrayList<@KeyFor("#1") K> theKeys = new ArrayList<>(m.keySet());
     Collections.sort(theKeys);
     return theKeys;
@@ -1358,8 +1690,20 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Given an expected number of elements, returns the capacity that should be passed to a HashMap
-   * or HashSet constructor, so that the set or map will not resize.
+   * Given an array, returns the capacity that should be passed to a HashMap or HashSet constructor,
+   * so that the set or map will not resize.
+   *
+   * @param <T> the type of elements of the array
+   * @param a an array whose length is the maximum expected number of elements in the map or set
+   * @return the initial capacity to pass to a HashMap or HashSet constructor
+   */
+  public static <T> int mapCapacity(T[] a) {
+    return mapCapacity(a.length);
+  }
+
+  /**
+   * Given a collection, returns the capacity that should be passed to a HashMap or HashSet
+   * constructor, so that the set or map will not resize.
    *
    * @param c a collection whose size is the maximum expected number of elements in the map or set
    * @return the initial capacity to pass to a HashMap or HashSet constructor
@@ -1369,8 +1713,8 @@ public final class CollectionsPlume {
   }
 
   /**
-   * Given an expected number of elements, returns the capacity that should be passed to a HashMap
-   * or HashSet constructor, so that the set or map will not resize.
+   * Given a map, returns the capacity that should be passed to a HashMap or HashSet constructor, so
+   * that the set or map will not resize.
    *
    * @param m a map whose size is the maximum expected number of elements in the map or set
    * @return the initial capacity to pass to a HashMap or HashSet constructor
@@ -1379,25 +1723,101 @@ public final class CollectionsPlume {
     return mapCapacity(m.size());
   }
 
+  // The following two methods cannot share an implementation because their generic bounds differ.
+
   /**
-   * Returns a copy of {@code orig}, where each element of the result is a clone of the
+   * Returns a copy of {@code orig}, where each key and value in the result is a deep copy
+   * (according to the {@code DeepCopyable} interface) of the corresponding element of {@code orig}.
+   *
+   * @param <K> the type of keys of the map
+   * @param <V> the type of values of the map
+   * @param <M> the type of the map
+   * @param orig a map
+   * @return a copy of {@code orig}, as described above
+   */
+  @SuppressWarnings({"nullness", "signedness"}) // generics problem with clone
+  public static <
+          K extends @Nullable DeepCopyable<K>,
+          V extends @Nullable DeepCopyable<V>,
+          M extends @Nullable Map<K, V>>
+      @PolyNull M deepCopy(@PolyNull M orig) {
+    if (orig == null) {
+      return null;
+    }
+    M result = UtilPlume.clone(orig);
+    result.clear();
+    for (Map.Entry<K, V> mapEntry : orig.entrySet()) {
+      K oldKey = mapEntry.getKey();
+      V oldValue = mapEntry.getValue();
+      result.put(DeepCopyable.deepCopyOrNull(oldKey), DeepCopyable.deepCopyOrNull(oldValue));
+    }
+    return result;
+  }
+
+  /**
+   * Returns a copy of {@code orig}, where each value of the result is a deep copy (according to the
+   * {@code DeepCopyable} interface) of the corresponding value of {@code orig}, but the keys are
+   * the same objects.
+   *
+   * @param <K> the type of keys of the map
+   * @param <V> the type of values of the map
+   * @param <M> the type of the map
+   * @param orig a map
+   * @return a copy of {@code orig}, as described above
+   */
+  @SuppressWarnings({"nullness", "signedness"}) // generics problem with clone
+  public static <K, V extends @Nullable DeepCopyable<V>, M extends @Nullable Map<K, V>> @PolyNull M deepCopyValues(@PolyNull M orig) {
+    if (orig == null) {
+      return null;
+    }
+    M result = UtilPlume.clone(orig);
+    result.clear();
+    for (Map.Entry<K, V> mapEntry : orig.entrySet()) {
+      K oldKey = mapEntry.getKey();
+      V oldValue = mapEntry.getValue();
+      result.put(oldKey, DeepCopyable.deepCopyOrNull(oldValue));
+    }
+    return result;
+  }
+
+  /**
+   * Creates a LRU cache.
+   *
+   * <p>You might want to consider using a {@code WeakHashMap} or {@code WeakIdentityHashMap}
+   * instead
+   *
+   * @param <K> the type of keys
+   * @param <V> the type of values
+   * @param size size of the cache
+   * @return a new cache with the provided size
+   */
+  public static <K, V> Map<K, V> createLruCache(@Positive int size) {
+    return new LinkedHashMap<K, V>(size, .75F, true) {
+
+      private static final long serialVersionUID = 5261489276168775084L;
+
+      @SuppressWarnings(
+          "lock:override.receiver") // cannot write receiver parameter within an anonymous class
+      @Override
+      protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
+        return size() > size;
+      }
+    };
+  }
+
+  /**
+   * Returns a copy of {@code orig}, where each key and value in the result is a clone of the
    * corresponding element of {@code orig}.
    *
    * @param <K> the type of keys of the map
    * @param <V> the type of values of the map
+   * @param <M> the type of the map
    * @param orig a map
-   * @return a deep copy of {@code orig}
+   * @return a copy of {@code orig}, as described above
    */
-  @SuppressWarnings({"nullness", "signedness"}) // generics problem with UtilPlume.clone
-  public static <K, V> @PolyNull Map<K, V> deepCopy(@PolyNull Map<K, V> orig) {
-    if (orig == null) {
-      return null;
-    }
-    Map<K, V> result = new HashMap<>(orig.size());
-    for (Map.Entry<K, V> mapEntry : orig.entrySet()) {
-      result.put(UtilPlume.clone(mapEntry.getKey()), UtilPlume.clone(mapEntry.getValue()));
-    }
-    return result;
+  @SuppressWarnings({"nullness", "signedness"}) // generics problem with clone
+  public static <K, V, M extends @Nullable Map<K, V>> @PolyNull M cloneElements(@PolyNull M orig) {
+    return cloneElements(orig, true);
   }
 
   /**
@@ -1406,17 +1826,38 @@ public final class CollectionsPlume {
    *
    * @param <K> the type of keys of the map
    * @param <V> the type of values of the map
+   * @param <M> the type of the map
    * @param orig a map
-   * @return a deep copy of {@code orig}
+   * @return a copy of {@code orig}, as described above
    */
-  @SuppressWarnings({"nullness", "signedness"}) // generics problem with UtilPlume.clone
-  public static <K, V> @PolyNull Map<K, V> deepCopyValues(@PolyNull Map<K, V> orig) {
+  @SuppressWarnings({"nullness", "signedness"}) // generics problem with clone
+  public static <K, V, M extends @Nullable Map<K, V>> @PolyNull M cloneValues(@PolyNull M orig) {
+    return cloneElements(orig, false);
+  }
+
+  /**
+   * Returns a copy of {@code orig}, where each key and value in the result is a clone of the
+   * corresponding element of {@code orig}.
+   *
+   * @param <K> the type of keys of the map
+   * @param <V> the type of values of the map
+   * @param <M> the type of the map
+   * @param orig a map
+   * @param cloneKeys if true, clone keys; otherwise, re-use them
+   * @return a copy of {@code orig}, as described above
+   */
+  @SuppressWarnings({"nullness", "signedness"}) // generics problem with clone
+  private static <K, V, M extends @Nullable Map<K, V>> @PolyNull M cloneElements(
+      @PolyNull M orig, boolean cloneKeys) {
     if (orig == null) {
       return null;
     }
-    Map<K, V> result = new HashMap<>(orig.size());
+    M result = UtilPlume.clone(orig);
+    result.clear();
     for (Map.Entry<K, V> mapEntry : orig.entrySet()) {
-      result.put(mapEntry.getKey(), UtilPlume.clone(mapEntry.getValue()));
+      K oldKey = mapEntry.getKey();
+      K newKey = cloneKeys ? UtilPlume.clone(oldKey) : oldKey;
+      result.put(newKey, UtilPlume.clone(mapEntry.getValue()));
     }
     return result;
   }

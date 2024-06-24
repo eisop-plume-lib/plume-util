@@ -38,6 +38,7 @@ import java.util.TreeMap;
 import org.checkerframework.checker.lock.qual.GuardSatisfied;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.signedness.qual.UnknownSignedness;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -118,6 +119,7 @@ public class ArrayMapTestApache {
   static final int hmSize = 100;
   Object @Nullable [] objArray;
   Object @Nullable [] objArray2;
+
   /** java.util.ArrayMap#ArrayMap() */
   @Test
   public void test_Constructor() {
@@ -125,6 +127,7 @@ public class ArrayMapTestApache {
     ArrayMap hm2 = new ArrayMap();
     assertEquals(0, hm2.size());
   }
+
   /** java.util.ArrayMap#ArrayMap(int) */
   @Test
   public void test_ConstructorI() {
@@ -142,6 +145,7 @@ public class ArrayMapTestApache {
     empty.put("something", "here");
     assertTrue(empty.get("something") == "here"); // interned
   }
+
   /** java.util.ArrayMap#ArrayMap(int, float) */
   @Test
   public void test_ConstructorIF() {
@@ -153,6 +157,7 @@ public class ArrayMapTestApache {
     empty.put("something", "here");
     assertTrue(empty.get("something") == "here"); // interned
   }
+
   /** java.util.ArrayMap#ArrayMap(java.util.Map) */
   @Test
   public void test_ConstructorLjava_util_Map() {
@@ -167,6 +172,7 @@ public class ArrayMapTestApache {
     hm = new ArrayMap(mockMap);
     assertEquals(hm, mockMap);
   }
+
   /** java.util.ArrayMap#clear() */
   @Test
   public void test_clear() {
@@ -184,6 +190,7 @@ public class ArrayMapTestApache {
       assertNull(map.get(i));
     }
   }
+
   /** java.util.ArrayMap#clone() */
   @Test
   public void test_clone() {
@@ -221,6 +228,7 @@ public class ArrayMapTestApache {
     assertEquals(0, ((MockClonable) hashmap.get(1)).i);
     assertEquals(0, ((MockClonable) hm3.get(1)).i);
   }
+
   /** java.util.ArrayMap#containsKey(java.lang.Object) */
   @Test
   public void test_containsKeyLjava_lang_Object() {
@@ -233,6 +241,7 @@ public class ArrayMapTestApache {
     assertTrue(m.containsKey(null));
     assertTrue(!m.containsKey(new Integer(0)));
   }
+
   /** java.util.ArrayMap#containsValue(java.lang.Object) */
   @Test
   public void test_containsValueLjava_lang_Object() {
@@ -241,6 +250,7 @@ public class ArrayMapTestApache {
     assertTrue(hm.containsValue(new Integer(87)));
     assertTrue(!hm.containsValue(new Integer(-9)));
   }
+
   /** java.util.ArrayMap#entrySet() */
   @Test
   public void test_entrySet() {
@@ -256,6 +266,7 @@ public class ArrayMapTestApache {
     s.remove(iter.next());
     assertEquals(101, s.size());
   }
+
   /** java.util.ArrayMap#entrySet() */
   @Test
   public void test_entrySetEquals() {
@@ -263,6 +274,7 @@ public class ArrayMapTestApache {
     Set s2 = new ArrayMap(hm).entrySet();
     assertEquals(s1, s2);
   }
+
   /** java.util.ArrayMap#entrySet() */
   @Test
   public void test_removeFromViews() {
@@ -273,6 +285,7 @@ public class ArrayMapTestApache {
     m2.put("B", null);
     assertTrue(hm.entrySet().remove(m2.entrySet().iterator().next()));
   }
+
   /** java.util.ArrayMap#get(java.lang.Object) */
   @Test
   public void test_getLjava_lang_Object() {
@@ -286,6 +299,7 @@ public class ArrayMapTestApache {
     assertEquals("test", m.get(null));
     assertNull(m.get(new Integer(0)));
   }
+
   /** java.util.ArrayMap#isEmpty() */
   @Test
   public void test_isEmpty() {
@@ -293,6 +307,7 @@ public class ArrayMapTestApache {
     assertTrue(new ArrayMap().isEmpty());
     assertTrue(!hm.isEmpty());
   }
+
   /** java.util.ArrayMap#keySet() */
   @Test
   public void test_keySet() {
@@ -338,6 +353,7 @@ public class ArrayMapTestApache {
     assertEquals(1, map2.size());
     assertTrue(map2.keySet().iterator().next().equals(next));
   }
+
   /** java.util.ArrayMap#put(java.lang.Object, java.lang.Object) */
   @Test
   public void test_putLjava_lang_ObjectLjava_lang_Object() {
@@ -398,10 +414,11 @@ public class ArrayMapTestApache {
     }
 
     @Override
-    public int hashCode(@GuardSatisfied MyKey this) {
+    public int hashCode(@GuardSatisfied @UnknownSignedness MyKey this) {
       return 0;
     }
   }
+
   /** java.util.ArrayMap#putAll(java.util.Map) */
   @Test
   public void test_putAllLjava_util_Map() {
@@ -415,6 +432,7 @@ public class ArrayMapTestApache {
     hm2.putAll(mockMap);
     assertEquals(0, hm2.size());
   }
+
   /** java.util.ArrayMap#putAll(java.util.Map) */
   @Test
   public void test_putAllLjava_util_Map_Null() {
@@ -455,6 +473,7 @@ public class ArrayMapTestApache {
       assertEquals(j, m1.get(j));
     }
   }
+
   /** java.util.ArrayMap#remove(java.lang.Object) */
   @Test
   public void test_removeLjava_lang_Object() {
@@ -492,12 +511,14 @@ public class ArrayMapTestApache {
     map.remove(0);
     assertNull(map.get(0));
   }
+
   /** java.util.ArrayMap#size() */
   @Test
   public void test_size() {
     // Test for method int java.util.ArrayMap.size()
     assertTrue(hm.size() == (objArray.length + 2));
   }
+
   /** java.util.ArrayMap#values() */
   @Test
   public void test_values() {
@@ -511,6 +532,7 @@ public class ArrayMapTestApache {
     values.remove(new Integer(0));
     assertTrue(!myArrayMap.containsValue(new Integer(0)));
   }
+
   /** java.util.AbstractMap#toString() */
   @Test
   public void test_toString() {
@@ -528,7 +550,7 @@ public class ArrayMapTestApache {
     }
 
     @Override
-    public int hashCode(@GuardSatisfied ReusableKey this) {
+    public int hashCode(@GuardSatisfied @UnknownSignedness ReusableKey this) {
       return key;
     }
 
@@ -557,6 +579,7 @@ public class ArrayMapTestApache {
       return new MockClonable(i);
     }
   }
+
   /*
    * Regression test for HY-4750
    */
@@ -586,12 +609,12 @@ public class ArrayMapTestApache {
       return "ONE";
     }
 
-    @SuppressWarnings("mustcall:override.param") // #979: new type inference failure in CF 3.33.0
     @Override
     public Object setValue(@GuardSatisfied MockEntry this, Object object) {
       return null;
     }
   }
+
   /**
    * Sets up the fixture, for example, open a network connection. This method is called before a
    * test is executed.

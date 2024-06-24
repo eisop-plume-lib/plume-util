@@ -34,10 +34,13 @@ public class CombinationIterator<T> implements Iterator<List<T>> {
 
   /** Lists of candidate values for each position in generated lists. */
   private final List<T>[] listsOfCandidates;
+
   /** Iterators for each list of candidate values. */
   private final Iterator<T>[] iterators;
+
   /** The size of each returned result; the length of listsOfCandidates. */
   private final @LengthOf({"listsOfCandidates", "iterators"}) int combinationSize;
+
   /** The next value to return, or null if to more values. */
   private @Nullable List<T> nextValue;
 
@@ -51,6 +54,7 @@ public class CombinationIterator<T> implements Iterator<List<T>> {
   public CombinationIterator(Collection<? extends Collection<T>> collectionsOfCandidates) {
     int size = collectionsOfCandidates.size();
     // Just like collectionsOfCandidates, but indexable.
+    @SuppressWarnings({"nullness:unneeded.suppression", "keyfor:argument"}) // temporary
     ArrayList<? extends Collection<T>> listOfCollectionsOfCanditates =
         new ArrayList<>(collectionsOfCandidates);
     listsOfCandidates = new ArrayList[size];
