@@ -33,4 +33,5 @@ jobs:
       run: ./gradlew requireJavadoc
     # TODO: This might be done by "./gradlew build"
     - name: ./gradlew spotlessCheck
+      if: ${{ matrix.java != '8' }}
       run: ./gradlew spotlessCheck

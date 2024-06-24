@@ -1,12 +1,19 @@
+buildscript {
+  dependencies {
+    if (JavaVersion.current() >= JavaVersion.VERSION_11) {
+      // Code formatting; defines targets "spotlessApply" and "spotlessCheck".
+      // https://github.com/diffplug/spotless/tags ; see tags starting "gradle/"
+      // Only works on JDK 11+.
+      classpath 'com.diffplug.spotless:spotless-plugin-gradle:6.25.0'
+    }
+  }
+}
+
 plugins {
   id 'java-library'
 
   // To create a fat jar build/libs/...-all.jar, run: ./gradlew shadowJar
   id 'com.github.johnrengelman.shadow' version '8.1.1'
-
-  // Code formatting; defines targets "spotlessApply" and "spotlessCheck"
-  // Version 6.14.0 and later requires JRE 11+, but version 6.13.0 doesn't work on JRE 21.
-  id 'com.diffplug.spotless' version '6.13.0'
 
   // Error Prone linter
   id('net.ltgt.errorprone') version '4.0.1'
@@ -21,10 +28,10 @@ repositories {
   maven { url 'https://oss.sonatype.org/content/repositories/snapshots/' }
 }
 
-// Error Prone versions later than 2.10.0 require JDK 11.
-ext.errorproneVersion = '2.10.0'
+ext.errorproneVersion = '2.28.0'
 
 ext {
+  isJava11orHigher = JavaVersion.current() >= JavaVersion.VERSION_11
   isJava21orHigher = JavaVersion.current() >= JavaVersion.VERSION_21
 }
 
@@ -35,6 +42,7 @@ dependencies {
   // annoying nonetheless) when a client of plume-util doesn't itself depend on
   // error_prone_annotations.  (Even if the dependency is "compileOnly".)
   // implementation "com.google.errorprone:error_prone_annotations:${errorproneVersion}"
+  errorprone("com.google.errorprone:error_prone_core:${errorproneVersion}")
 
   testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
   testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
@@ -60,7 +68,8 @@ test {
   }
 }
 
-if (! isJava21orHigher) {
+if (isJava11orHigher) {
+  apply plugin: 'com.diffplug.spotless'
   spotless {
     format 'misc', {
       // define the files to apply `misc` to
@@ -88,9 +97,6 @@ if (! isJava21orHigher) {
 
 /// Error Prone linter
 
-dependencies {
-  errorprone("com.google.errorprone:error_prone_core:${errorproneVersion}")
-}
 tasks.withType(JavaCompile).configureEach {
   // "-processing" avoids javac warning "No processor claimed any of these annotations".
   // "-options" is because starting in JDK 20, javac warns about using -source 8.
@@ -98,6 +104,7 @@ tasks.withType(JavaCompile).configureEach {
   if (isJava21orHigher) {
     options.compilerArgs << '-Xlint:-this-escape'
   }
+  options.errorprone.enabled = isJava11orHigher
   options.errorprone {
     // ExtendsObject does not yet exist in Error Prone 2.10.0.
     // disable('ExtendsObject')  // Incorrect when using the Checker Framework
@@ -110,27 +117,24 @@ tasks.withType(JavaCompile).configureEach {
 
 /// Checker Framework pluggable type-checking
 
-// To use a released version of the Checker Framework.
 if (true) {
-  dependencies {
-    ext.checkerFrameworkVersion = '3.42.0-eisop3'
-    compileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
-    testCompileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
-    checkerFramework "io.github.eisop:checker:${checkerFrameworkVersion}"
-  }
-}
-// To use a snapshot version of the Checker Framework.
-if (false) {
+  // Use the released version of the EISOP Checker Framework.
   ext.checkerFrameworkVersion = '3.42.0-eisop3'
-  dependencies {
-    compileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
-    testCompileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
-    checkerFramework "io.github.eisop:checker:${checkerFrameworkVersion}"
-  }
+} else {
+  // To use a snapshot version of the EISOP Checker Framework.
+  // TODO: Change the above test to false to use a snapshot.
+  ext.checkerFrameworkVersion = '3.42.0-eisop4-SNAPSHOT'
   configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'minutes'
   }
 }
+
+dependencies {
+  compileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
+  testCompileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
+  checkerFramework "io.github.eisop:checker:${checkerFrameworkVersion}"
+}
+
 // To use a locally-built Checker Framework, run gradle with "-PcfLocal".
 if (project.hasProperty('cfLocal')) {
   def cfHome = String.valueOf(System.getenv('CHECKERFRAMEWORK'))
@@ -169,28 +173,7 @@ checkerFramework {
     '-AnoJreVersionCheck',
   ]
 }
-// To use a snapshot version of the Checker Framework.
-if (true) {
-  // TODO: Change the above test to false when CF is released.
-  ext.checkerFrameworkVersion = '3.44.0'
-  dependencies {
-    compileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
-    testCompileOnly "io.github.eisop:checker-qual:${checkerFrameworkVersion}"
-    checkerFramework "io.github.eisop:checker:${checkerFrameworkVersion}"
-  }
-  configurations.all {
-    resolutionStrategy.cacheChangingModulesFor 0, 'minutes'
-  }
-}
-// To use a locally-built Checker Framework, run gradle with "-PcfLocal".
-if (project.hasProperty('cfLocal')) {
-  def cfHome = String.valueOf(System.getenv('CHECKERFRAMEWORK'))
-  dependencies {
-    compileOnly files(cfHome + '/checker/dist/checker-qual.jar')
-    testCompileOnly files(cfHome + '/checker/dist/checker-qual.jar')
-    checkerFramework files(cfHome + '/checker/dist/checker.jar')
-  }
-}
+
 /// Javadoc
 
 // Turn Javadoc warnings into errors.
