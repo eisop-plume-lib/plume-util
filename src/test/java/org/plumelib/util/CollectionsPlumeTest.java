@@ -408,7 +408,7 @@ public final class CollectionsPlumeTest {
   }
 
   @Test
-  @SuppressWarnings("lock:type.arguments.not.inferred")
+  @SuppressWarnings("lock:methodref.receiver.invalid")
   public void testMapList() {
     List<Object> in = Arrays.asList(new Object[] {1, 2, 3});
     List<Object> out = Arrays.asList(new Object[] {"1", "2", "3"});
@@ -416,7 +416,7 @@ public final class CollectionsPlumeTest {
   }
 
   @Test
-  @SuppressWarnings("lock:type.arguments.not.inferred")
+  @SuppressWarnings("lock:methodref.receiver.invalid")
   public void testTransform() {
     List<Object> in = Arrays.asList(new Object[] {1, 2, 3});
     List<Object> out = Arrays.asList(new Object[] {"1", "2", "3"});
