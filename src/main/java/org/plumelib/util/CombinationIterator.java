@@ -90,6 +90,7 @@ public class CombinationIterator<T> implements Iterator<List<T>> {
   private void advanceNext(@GuardSatisfied CombinationIterator<T> this) {
     List<T> nnNextValue = nextValue;
     for (int i = combinationSize - 1; i >= 0; i--) {
+      assert nextValue != null : "@AssumeAssertion(nullness): nextValue is non-null after the assertion";
       if (iterators[i].hasNext()) {
         nnNextValue.set(i, iterators[i].next());
         return;
