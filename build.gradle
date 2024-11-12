@@ -122,7 +122,7 @@ tasks.withType(JavaCompile).configureEach {
 
 if (true) {
   // Use the released version of the EISOP Checker Framework.
-  ext.checkerFrameworkVersion = '3.42.0-eisop3'
+  ext.checkerFrameworkVersion = '3.42.0-eisop4'
 } else {
   // To use a snapshot version of the EISOP Checker Framework.
   // TODO: Change the above test to false to use a snapshot.
