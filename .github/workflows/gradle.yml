@@ -9,7 +9,7 @@ jobs:
 
     strategy:
       matrix:
-        java: [ '8', '11', '17', '21' ]
+        java: [ '8', '11', '17', '21', '23' ]
 
     steps:
     - uses: actions/checkout@v4
@@ -24,7 +24,7 @@ jobs:
     - name: java -version
       run: java -version
     - name: ./gradlew build javadoc
-      run: ./gradlew build
+      run: ./gradlew build javadoc
     - name: Setup local CF
       run: ./.setup-CF.sh
     - name: ./gradlew -PcfLocal build
