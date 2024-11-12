@@ -206,8 +206,6 @@ public final class StringsPlume {
    */
   @SuppressWarnings({
     "value:statically.executable.not.pure", // pure wrt `equals()` but not `==`
-    "allcheckers:purity.not.sideeffectfree.call", // TODO: check after JDK update
-    "lock:method.guarantee.violated" // TODO: check after JDK update
   })
   @SideEffectFree
   @StaticallyExecutable
