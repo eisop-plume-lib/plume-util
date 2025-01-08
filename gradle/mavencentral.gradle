@@ -46,8 +46,8 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
 
-group 'org.plumelib'
-version '1.10.0'
+group = 'org.plumelib'
+version = '1.10.0'
 ext {
   packageName = 'plume-util'
 }
@@ -71,12 +71,12 @@ publishing {
       pom {
         name = 'Plume Util'
         description = 'Utility libraries for Java.  Complements Guava, Apache Commons, Eclipse Collections, etc.'
-        url = "https://github.com/plume-lib/${packageName}"
+        url = "https://github.com/eisop-plume-lib/${packageName}"
 
         scm {
-          connection = "scm:git:git@github.com:plume-lib/${packageName}.git"
-          developerConnection = "scm:git:git@github.com:plume-lib/${packageName}.git"
-          url = "git@github.com:plume-lib/${packageName}.git"
+          connection = "scm:git:git@github.com:eisop-plume-lib/${packageName}.git"
+          developerConnection = "scm:git:git@github.com:eisop-plume-lib/${packageName}.git"
+          url = "git@github.com:eisop-plume-lib/${packageName}.git"
         }
 
         licenses {
