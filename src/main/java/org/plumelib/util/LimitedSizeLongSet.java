@@ -27,6 +27,7 @@ import org.checkerframework.dataflow.qual.SideEffectFree;
 // Consider adding the following 2 lines:
 //    * @deprecated use {@link LimitedSizeSet}
 //   @Deprecated
+@SuppressWarnings("AssignmentExpression") // No smaller scope easy to annotate.
 public class LimitedSizeLongSet implements Serializable, Cloneable {
   /** Unique identifier for serialization. If you add or remove fields, change this number. */
   static final long serialVersionUID = 20031021L;
