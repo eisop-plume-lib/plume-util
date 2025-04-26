@@ -24,6 +24,7 @@ import org.checkerframework.dataflow.qual.SideEffectFree;
  *
  * @param <T> the type of elements in the set
  */
+@SuppressWarnings("AssignmentExpression") // No smaller scope easy to annotate.
 public class LimitedSizeSet<T extends @Nullable Object> implements Serializable, Cloneable {
   /** Unique identifier for serialization. If you add or remove fields, change this number. */
   static final long serialVersionUID = 20031021L;
