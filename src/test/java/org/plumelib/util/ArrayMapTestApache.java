@@ -378,7 +378,8 @@ public class ArrayMapTestApache {
     boolean found = false;
     for (Iterator<Integer> itr = map.keySet().iterator(); itr.hasNext(); ) {
       Integer key = itr.next();
-      if (found = key == myKey) {
+      found = key == myKey;
+      if (found) {
         break;
       }
     }
@@ -390,7 +391,8 @@ public class ArrayMapTestApache {
     assertEquals("myValue", map.get(myKey));
     for (Iterator<Integer> itr = map.keySet().iterator(); itr.hasNext(); ) {
       Integer key = itr.next();
-      if (found = key == myKey) {
+      found = key == myKey;
+      if (found) {
         break;
       }
     }
