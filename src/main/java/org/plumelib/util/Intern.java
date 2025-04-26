@@ -28,6 +28,7 @@ import org.checkerframework.dataflow.qual.SideEffectFree;
  * <p>Java builds in interning for Strings, but not for other objects. The methods in this class
  * extend interning to all Java objects.
  */
+@SuppressWarnings("AssignmentExpression") // No smaller scope easy to annotate.
 public final class Intern {
 
   /** This class is a collection of methods; it does not represent anything. */
