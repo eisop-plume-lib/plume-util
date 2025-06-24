@@ -25,7 +25,6 @@ repositories {
 
 ext {
   errorproneVersion = '2.38.0'
-  isJava11orHigher = JavaVersion.current() >= JavaVersion.VERSION_11
   isJava17orHigher = JavaVersion.current() >= JavaVersion.VERSION_17
   isJava21orHigher = JavaVersion.current() >= JavaVersion.VERSION_21
 }
@@ -63,30 +62,28 @@ test {
   }
 }
 
-if (isJava11orHigher) {
-  apply plugin: 'com.diffplug.spotless'
-  spotless {
-    format 'misc', {
-      // define the files to apply `misc` to
-      target '*.md', '.gitignore'
 
-      // define the steps to apply to those files
-      trimTrailingWhitespace()
-      leadingTabsToSpaces(2)
-      endWithNewline()
-    }
-    java {
-      targetExclude('**/WeakIdentityHashMap.java')
-      googleJavaFormat()
-      formatAnnotations()
-    }
-    groovyGradle {
-      target '**/*.gradle'
-      greclipse()  // which formatter Spotless should use to format .gradle files.
-      leadingTabsToSpaces(2)
-      trimTrailingWhitespace()
-      // endWithNewline() // Don't want to end empty files with a newline
-    }
+spotless {
+  format 'misc', {
+    // define the files to apply `misc` to
+    target '*.md', '.gitignore'
+
+    // define the steps to apply to those files
+    trimTrailingWhitespace()
+    leadingTabsToSpaces(2)
+    endWithNewline()
+  }
+  java {
+    targetExclude('**/WeakIdentityHashMap.java')
+    googleJavaFormat()
+    formatAnnotations()
+  }
+  groovyGradle {
+    target '**/*.gradle'
+    greclipse()  // which formatter Spotless should use to format .gradle files.
+    leadingTabsToSpaces(2)
+    trimTrailingWhitespace()
+    // endWithNewline() // Don't want to end empty files with a newline
   }
 }
 
@@ -100,6 +97,7 @@ tasks.withType(JavaCompile).configureEach {
   if (isJava21orHigher) {
     options.compilerArgs << '-Xlint:-this-escape'
   }
+  options.errorprone.enabled = isJava17orHigher
   options.errorprone {
     // ExtendsObject does not yet exist in Error Prone 2.10.0.
     // disable('ExtendsObject')  // Incorrect when using the Checker Framework
@@ -107,7 +105,6 @@ tasks.withType(JavaCompile).configureEach {
     disable('ReferenceEquality') // Use Interning Checker instead.
     disable('AnnotateFormatMethod') // Error Prone doesn't know about Checker Framework @FormatMethod
   }
-  options.errorprone.enabled = isJava17orHigher
 }
 
 // Checker Framework pluggable type-checking
@@ -120,7 +117,7 @@ if (true) {
 } else {
   // To use a snapshot version of the EISOP Checker Framework.
   // TODO: Change the above test to false to use a snapshot.
-  ext.checkerFrameworkVersion = '3.49.3-eisop1'
+  // ext.checkerFrameworkVersion = '3.49.3-eisop1-SNAPSHOT'
   configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'minutes'
   }
