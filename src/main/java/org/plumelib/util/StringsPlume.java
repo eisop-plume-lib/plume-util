@@ -1430,11 +1430,13 @@ public final class StringsPlume {
    *
    * @param m a map
    * @return a string representation of the map
+   * @deprecated use {@link CollectionsPlume#mapToStringAndClassMultiLine}
    */
   @SuppressWarnings({
     "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
     "lock:method.guarantee.violated" // side effect to local state
   })
+  @Deprecated // 2025-06-21
   @SideEffectFree
   public static String mapToStringAndClass(
       Map<? extends @Signed @PolyNull Object, ? extends @Signed @PolyNull Object> m) {
@@ -1451,11 +1453,13 @@ public final class StringsPlume {
    *
    * @param m a map
    * @return a string representation of the map
+   * @deprecated use {@link CollectionsPlume#mapToStringAndClassMultiLine}
    */
   @SuppressWarnings({
     "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
     "lock:method.guarantee.violated" // side effect to local state
   })
+  @Deprecated // 2025-06-21
   @SideEffectFree
   public static String mapToStringLinewise(
       Map<? extends @Signed @PolyNull Object, ? extends @Signed @PolyNull Object> m) {
