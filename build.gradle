@@ -1,14 +1,3 @@
-buildscript {
-  dependencies {
-    if (JavaVersion.current() >= JavaVersion.VERSION_11) {
-      // Code formatting; defines targets "spotlessApply" and "spotlessCheck".
-      // https://github.com/diffplug/spotless/tags ; see tags starting "gradle/"
-      // Only works on JDK 11+.
-      classpath 'com.diffplug.spotless:spotless-plugin-gradle:7.0.4'
-    }
-  }
-}
-
 plugins {
   id 'java-library'
 
@@ -20,6 +9,11 @@ plugins {
 
   // Checker Framework pluggable type-checking
   id 'org.checkerframework' version '0.6.55' apply false
+
+  // Code formatting; defines targets "spotlessApply" and "spotlessCheck".
+  // https://github.com/diffplug/spotless/tags ; see tags starting "gradle/"
+  // Only works on JDK 11+ (even including the plugin crashes Gradle on JDK 8).
+  id 'com.diffplug.spotless' version '7.0.4'
 }
 
 repositories {
