@@ -22,6 +22,7 @@ import java.util.Random;
 import java.util.RandomAccess;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.StringJoiner;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -38,6 +39,7 @@ import org.checkerframework.checker.nullness.qual.PolyNull;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.checker.signedness.qual.Signed;
 import org.checkerframework.dataflow.qual.Pure;
+import org.checkerframework.dataflow.qual.SideEffectFree;
 
 /** Utility functions for Collections, ArrayList, Iterator, and Map. */
 public final class CollectionsPlume {
@@ -53,6 +55,26 @@ public final class CollectionsPlume {
   // //////////////////////////////////////////////////////////////////////
   // Collections
   //
+
+  /**
+   * Adds all elements of the Iterable to the collection. This method is just like {@code
+   * Collection.addAll()}, but that method takes only a Collection, not any Iterable, as its
+   * arguments.
+   *
+   * @param <T> the type of elements
+   * @param c the collection into which elements are to be inserted
+   * @param elements the elements to insert into c
+   * @return true if the collection changed as a result of the call
+   */
+  public static <T> boolean addAll(Collection<? super T> c, Iterable<? extends T> elements) {
+    boolean added = false;
+    for (T elt : elements) {
+      if (c.add(elt)) {
+        added = true;
+      }
+    }
+    return added;
+  }
 
   /**
    * Returns true iff the list does not contain duplicate elements, according to {@code equals()}.
@@ -1276,14 +1298,91 @@ public final class CollectionsPlume {
     }
   }
 
-  // This must already be implemented someplace else.  Right??
+  /**
+   * Returns an iterator that returns the elements of {@code itor} then {@code lastElement}.
+   *
+   * @param <T> the type of elements of the iterator
+   * @param itor an Iterator
+   * @param lastElement one element
+   * @return an iterator that returns the elements of {@code itor} then {@code lastElement}
+   */
+  public static <T> Iterator<T> iteratorPlusOne(Iterator<T> itor, T lastElement) {
+    return new IteratorPlusOne<>(itor, lastElement);
+  }
+
+  /**
+   * An Iterator that returns first the elements returned by its first argument, then its second
+   * argument.
+   *
+   * @param <T> the type of elements of the iterator
+   */
+  private static final class IteratorPlusOne<T> implements Iterator<T> {
+    /** The iterator that this object yields first. */
+    private Iterator<T> itor;
+
+    /** The last element that this iterator returns. */
+    private T lastElement;
+
+    /**
+     * True if this iterator has not yet yielded the lastElement element, and therefore is not done.
+     */
+    private boolean hasPlusOne = true;
+
+    /**
+     * Create an iterator that returns the elements of {@code itor} then {@code lastElement}.
+     *
+     * @param itor an Iterator
+     * @param lastElement one element
+     */
+    public IteratorPlusOne(Iterator<T> itor, T lastElement) {
+      this.itor = itor;
+      this.lastElement = lastElement;
+    }
+
+    @Override
+    public boolean hasNext(@GuardSatisfied IteratorPlusOne<T> this) {
+      return itor.hasNext() || hasPlusOne;
+    }
+
+    @Override
+    public T next(@GuardSatisfied IteratorPlusOne<T> this) {
+      if (itor.hasNext()) {
+        return itor.next();
+      } else if (hasPlusOne) {
+        hasPlusOne = false;
+        return lastElement;
+      } else {
+        throw new NoSuchElementException();
+      }
+    }
+
+    @Override
+    public void remove(@GuardSatisfied IteratorPlusOne<T> this) {
+      throw new UnsupportedOperationException();
+    }
+  }
+
+  /**
+   * Returns an iterator that returns the elements of {@code itor1} then those of {@code itor2}.
+   *
+   * @param <T> the type of elements of the iterator
+   * @param itor1 an Iterator
+   * @param itor2 another Iterator
+   * @return an iterator that returns the elements of {@code itor1} then those of {@code itor2}
+   */
+  public static <T> Iterator<T> mergedIterator2(Iterator<T> itor1, Iterator<T> itor2) {
+    return new MergedIterator2<>(itor1, itor2);
+  }
+
   /**
    * An Iterator that returns first the elements returned by its first argument, then the elements
    * returned by its second argument. Like {@link MergedIterator}, but specialized for the case of
    * two arguments.
    *
    * @param <T> the type of elements of the iterator
+   * @deprecated use {@link CollectionsPlume#mergedIterator2}
    */
+  @Deprecated // make package-private
   public static final class MergedIterator2<T> implements Iterator<T> {
     /** The first of the two iterators that this object merges. */
     Iterator<T> itor1;
@@ -1296,7 +1395,9 @@ public final class CollectionsPlume {
      *
      * @param itor1 an Iterator
      * @param itor2 another Iterator
+     * @deprecated use {@link CollectionsPlume#mergedIterator2}
      */
+    @Deprecated // use {@link #mergediterator2}
     public MergedIterator2(Iterator<T> itor1, Iterator<T> itor2) {
       this.itor1 = itor1;
       this.itor2 = itor2;
@@ -1324,6 +1425,28 @@ public final class CollectionsPlume {
     }
   }
 
+  /**
+   * Returns an iterator that returns the elements of the given iterators, in turn.
+   *
+   * @param <T> the type of elements of the iterator
+   * @param itbleOfItors a collection whose elements are iterators
+   * @return an iterator that returns the elements of the given iterators, in turn
+   */
+  public static <T> Iterator<T> mergedIterator(Iterable<Iterator<T>> itbleOfItors) {
+    return new MergedIterator<>(itbleOfItors.iterator());
+  }
+
+  /**
+   * Returns an iterator that returns the elements of the given iterators, in turn.
+   *
+   * @param <T> the type of elements of the iterator
+   * @param itorOfItors an iterator whose elements are iterators
+   * @return an iterator that returns the elements of the given iterators, in turn
+   */
+  public static <T> Iterator<T> mergedIterator(Iterator<Iterator<T>> itorOfItors) {
+    return new MergedIterator<>(itorOfItors);
+  }
+
   // This must already be implemented someplace else.  Right??
   /**
    * An Iterator that returns the elements in each of its argument Iterators, in turn. The argument
@@ -1331,8 +1454,11 @@ public final class CollectionsPlume {
    * of iterators.
    *
    * @param <T> the type of elements of the iterator
+   * @deprecated use {@code mergediterator()}
    */
+  @Deprecated // make package-private
   public static final class MergedIterator<T> implements Iterator<T> {
+
     /** The iterators that this object merges. */
     Iterator<Iterator<T>> itorOfItors;
 
@@ -1341,7 +1467,9 @@ public final class CollectionsPlume {
      *
      * @param itorOfItors an iterator whose elements are iterators; this MergedIterator will merge
      *     them all
+     * @deprecated use {@link mergedIterator(Iterator)}
      */
+    @Deprecated // make package-private
     public MergedIterator(Iterator<Iterator<T>> itorOfItors) {
       this.itorOfItors = itorOfItors;
     }
@@ -1374,11 +1502,25 @@ public final class CollectionsPlume {
   }
 
   /**
+   * Returns an iterator that only returns elements of {@code itor} that match the given predicate.
+   *
+   * @param <T> the type of elements of the iterator
+   * @param itor the Iterator to filter
+   * @param predicate the predicate that determines which elements to retain
+   * @return an iterator that only returns elements of {@code itor} that match the given predicate
+   */
+  public static <T> Iterator<T> filteredIterator(Iterator<T> itor, Predicate<T> predicate) {
+    return new FilteredIterator<>(itor, predicate);
+  }
+
+  /**
    * An iterator that only returns elements that match the given predicate.
    *
    * @param <T> the type of elements of the iterator
+   * @deprecated use {@link #filteredIterator}
    */
-  public static final class FilteredIterator<T extends @Nullable Object> implements Iterator<T> {
+  @Deprecated // make package-private
+  public static final class FilteredIterator<T> implements Iterator<T> {
     /** The iterator that this object is filtering. */
     Iterator<T> itor;
 
@@ -1390,7 +1532,9 @@ public final class CollectionsPlume {
      *
      * @param itor the Iterator to filter
      * @param predicate the predicate that determines which elements to retain
+     * @deprecated use {@link #filteredIterator}
      */
+    @Deprecated // make package-private
     public FilteredIterator(Iterator<T> itor, Predicate<T> predicate) {
       this.itor = itor;
       this.predicate = predicate;
@@ -1442,11 +1586,25 @@ public final class CollectionsPlume {
   }
 
   /**
+   * Returns an iterator just like {@code itor}, except without its first and last elements.
+   *
+   * @param <T> the type of elements of the iterator
+   * @param itor an itorator whose first and last elements to discard
+   * @return an iterator just like {@code itor}, except without its first and last elements
+   */
+  public static <T extends @Nullable Object> Iterator<T> removeFirstAndLastIterator(
+      Iterator<T> itor) {
+    return new RemoveFirstAndLastIterator<>(itor);
+  }
+
+  /**
    * Returns an iterator just like its argument, except that the first and last elements are
    * removed. They can be accessed via the {@link #getFirst} and {@link #getLast} methods.
    *
    * @param <T> the type of elements of the iterator
+   * @deprecated use {@link #removeFirstAndLastIterator}
    */
+  @Deprecated // make package-private
   public static final class RemoveFirstAndLastIterator<T> implements Iterator<T> {
     /** The wrapped iterator. */
     Iterator<T> itor;
@@ -1468,7 +1626,9 @@ public final class CollectionsPlume {
      * Create an iterator just like {@code itor}, except without its first and last elements.
      *
      * @param itor an itorator whose first and last elements to discard
+     * @deprecated use {@link #removeFirstAndLastIterator}
      */
+    @Deprecated // make package-private
     public RemoveFirstAndLastIterator(Iterator<T> itor) {
       this.itor = itor;
       if (itor.hasNext()) {
@@ -1545,7 +1705,7 @@ public final class CollectionsPlume {
    * @param numElts number of elements to select
    * @return list of numElts elements from itor
    */
-  public static <T> List<T> randomElements(Iterator<T> itor, int numElts) {
+  public static <T extends @Nullable Object> List<T> randomElements(Iterator<T> itor, int numElts) {
     return randomElements(itor, numElts, r);
   }
 
@@ -1630,46 +1790,6 @@ public final class CollectionsPlume {
       Map<K, Integer> m, K key, int count) {
     Integer newTotal = m.getOrDefault(key, 0) + count;
     return m.put(key, newTotal);
-  }
-
-  /**
-   * Returns a multi-line string representation of a map.
-   *
-   * @param <K> type of map keys
-   * @param <V> type of map values
-   * @param m map to be converted to a string
-   * @return a multi-line string representation of m
-   */
-  public static <K extends @Signed @Nullable Object, V extends @Signed @Nullable Object>
-      String mapToString(Map<K, V> m) {
-    StringBuilder sb = new StringBuilder();
-    mapToString(sb, m, "");
-    return sb.toString();
-  }
-
-  /**
-   * Write a multi-line representation of the map into the given Appendable (e.g., a StringBuilder).
-   *
-   * @param <K> type of map keys
-   * @param <V> type of map values
-   * @param sb an Appendable (such as StringBuilder) to which to write a multi-line string
-   *     representation of m
-   * @param m map to be converted to a string
-   * @param linePrefix prefix to write at the beginning of each line
-   */
-  public static <K extends @Signed @Nullable Object, V extends @Signed @Nullable Object>
-      void mapToString(Appendable sb, Map<K, V> m, String linePrefix) {
-    try {
-      for (Map.Entry<K, V> entry : m.entrySet()) {
-        sb.append(linePrefix);
-        sb.append(Objects.toString(entry.getKey()));
-        sb.append(" => ");
-        sb.append(Objects.toString(entry.getValue()));
-        sb.append(lineSep);
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
   }
 
   /**
@@ -1888,6 +2008,198 @@ public final class CollectionsPlume {
       result.put(newKey, UtilPlume.clone(mapEntry.getValue()));
     }
     return result;
+  }
+
+  //
+  // Map to string
+  //
+
+  // First, versions that append to an Appendable.
+
+  /**
+   * Write a multi-line representation of the map into the given Appendable (e.g., a StringBuilder),
+   * including a final line separator (unless the map is empty).
+   *
+   * <p>This is less expensive than {@code sb.append(mapToStringMultiLine(m))}.
+   *
+   * @param <K> type of map keys
+   * @param <V> type of map values
+   * @param sb an Appendable (such as StringBuilder) to which to write a multi-line string
+   *     representation of m
+   * @param m map to be converted to a string
+   * @param linePrefix a prefix to put at the beginning of each line
+   * @deprecated use {@link #mapToStringMultiLine(Appendable, Map, String)}
+   */
+  @Deprecated // 2026-06-21
+  public static <K extends @Signed @Nullable Object, V extends @Signed @Nullable Object>
+      void mapToString(Appendable sb, Map<K, V> m, String linePrefix) {
+    mapToStringMultiLine(sb, m, linePrefix);
+  }
+
+  /**
+   * Write a multi-line representation of the map into the given Appendable (e.g., a StringBuilder),
+   * including a final line separator (unless the map is empty).
+   *
+   * <p>This is less expensive than {@code sb.append(mapToStringMultiLine(m))}.
+   *
+   * @param <K> type of map keys
+   * @param <V> type of map values
+   * @param sb an Appendable (such as StringBuilder) to which to write a multi-line string
+   *     representation of m
+   * @param m map to be converted to a string
+   * @param linePrefix a prefix to put at the beginning of each line
+   */
+  public static <K extends @Signed @Nullable Object, V extends @Signed @Nullable Object>
+      void mapToStringMultiLine(Appendable sb, Map<K, V> m, String linePrefix) {
+    try {
+      for (Map.Entry<K, V> entry : m.entrySet()) {
+        sb.append(linePrefix);
+        sb.append(Objects.toString(entry.getKey()));
+        sb.append(" => ");
+        sb.append(Objects.toString(entry.getValue()));
+        sb.append(lineSep);
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  /**
+   * Write a multi-line representation of the map of maps into the given Appendable (e.g., a
+   * StringBuilder), including a final line separator (unless the map is empty).
+   *
+   * @param <K1> the type of the outer map keys
+   * @param <K2> the type of the inner map keys
+   * @param <V2> the type of the inner map values
+   * @param sb the destination for the string representation
+   * @param linePrefix a prefix to put at the beginning of each line
+   * @param innerHeader what to print before each key of the outer map (equivalently, before each
+   *     each inner map). If non-empty, it usually ends with a space to avoid abutting the outer map
+   *     key.
+   * @param mapMap what to print
+   */
+  static <K1 extends @Signed Object, K2 extends @Signed Object, V2 extends @Signed Object>
+      void mapMapToStringMultiLine(
+          Appendable sb, String innerHeader, Map<K1, Map<K2, V2>> mapMap, String linePrefix) {
+    try {
+      for (Map.Entry<K1, Map<K2, V2>> entry : mapMap.entrySet()) {
+        sb.append(linePrefix);
+        sb.append(innerHeader);
+        sb.append(Objects.toString(entry.getKey()));
+        sb.append(lineSep);
+        mapToStringMultiLine(sb, entry.getValue(), linePrefix + "  ");
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  // Second, versions that return a String.
+
+  /**
+   * Returns a multi-line string representation of a map.
+   *
+   * @param <K> type of map keys
+   * @param <V> type of map values
+   * @param m map to be converted to a string
+   * @return a multi-line string representation of m
+   * @deprecated use {@link #mapToStringMultiLine(Map)}
+   */
+  @Deprecated // 2025-06-21
+  @SideEffectFree
+  public static <K extends @Signed @Nullable Object, V extends @Signed @Nullable Object>
+      String mapToString(Map<K, V> m) {
+    return mapToStringMultiLine(m);
+  }
+
+  /**
+   * Returns a multi-line string representation of a map. Each key-value pair appears on its own
+   * line, with no indentation. The last line does not end with a line separator.
+   *
+   * @param <K> type of map keys
+   * @param <V> type of map values
+   * @param m map to be converted to a string
+   * @return a multi-line string representation of the map
+   */
+  @SuppressWarnings({
+    "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
+    "lock:method.guarantee.violated" // side effect to local state
+  })
+  @SideEffectFree
+  public static <K extends @Signed @Nullable Object, V extends @Signed @Nullable Object>
+      String mapToStringMultiLine(Map<K, V> m) {
+    StringJoiner result = new StringJoiner(lineSep);
+    for (Map.Entry<K, V> e : m.entrySet()) {
+      result.add(e.getKey() + " => " + e.getValue());
+    }
+    return result.toString();
+  }
+
+  /**
+   * Returns a multi-line string representation of a map. Each key-value pair appears on its own
+   * line, with no indentation. The last line does not end with a line separator.
+   *
+   * @param <K> type of map keys
+   * @param <V> type of map values
+   * @param m map to be converted to a string
+   * @param linePrefix a prefix to put at the beginning of each line
+   * @return a multi-line string representation of the map
+   */
+  @SuppressWarnings({
+    "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
+    "lock:method.guarantee.violated" // side effect to local state
+  })
+  @SideEffectFree
+  public static <K extends @Signed @Nullable Object, V extends @Signed @Nullable Object>
+      String mapToStringMultiLine(Map<K, V> m, String linePrefix) {
+    StringJoiner result = new StringJoiner(lineSep);
+    for (Map.Entry<K, V> e : m.entrySet()) {
+      result.add(linePrefix + e.getKey() + " => " + e.getValue());
+    }
+    return result.toString();
+  }
+
+  /**
+   * Convert a map to a multi-line string representation, which includes the runtime class of keys
+   * and values. The last line does not end with a line separator.
+   *
+   * @param <K> type of map keys
+   * @param <V> type of map values
+   * @param m a map
+   * @return a string representation of the map
+   */
+  @SideEffectFree
+  public static <K extends @Signed @Nullable Object, V extends @Signed @Nullable Object>
+      String mapToStringAndClassMultiLine(Map<K, V> m) {
+    return mapToStringAndClassMultiLine(m, "");
+  }
+
+  /**
+   * Convert a map to a multi-line string representation, which includes the runtime class of keys
+   * and values. The last line does not end with a line separator.
+   *
+   * @param <K> type of map keys
+   * @param <V> type of map values
+   * @param m a map
+   * @param linePrefix a prefix to put at the beginning of each line
+   * @return a string representation of the map
+   */
+  @SuppressWarnings({
+    "allcheckers:purity.not.sideeffectfree.call", // side effect to local state
+    "lock:method.guarantee.violated" // side effect to local state
+  })
+  @SideEffectFree
+  public static <K extends @Signed @Nullable Object, V extends @Signed @Nullable Object>
+      String mapToStringAndClassMultiLine(Map<K, V> m, String linePrefix) {
+    StringJoiner result = new StringJoiner(lineSep);
+    for (Map.Entry<K, V> e : m.entrySet()) {
+      result.add(
+          linePrefix
+              + StringsPlume.toStringAndClass(e.getKey())
+              + " => "
+              + StringsPlume.toStringAndClass(e.getValue()));
+    }
+    return result.toString();
   }
 
   // //////////////////////////////////////////////////////////////////////

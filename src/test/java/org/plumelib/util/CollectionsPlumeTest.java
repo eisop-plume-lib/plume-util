@@ -10,16 +10,19 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Random;
 import java.util.Set;
 import java.util.SortedSet;
+import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 import org.checkerframework.checker.index.qual.IndexFor;
@@ -28,6 +31,9 @@ import org.junit.jupiter.api.Test;
 import org.plumelib.util.CollectionsPlume.Replacement;
 
 public final class CollectionsPlumeTest {
+
+  /** The line separator. */
+  private static final String lineSep = System.lineSeparator();
 
   // If true, do 100 instead of 100000 iterations when testing randomElements.
   // This saves only a little time.  However, it is significant when running
@@ -116,6 +122,16 @@ public final class CollectionsPlumeTest {
   // The tests themselves
   //
 
+  // TODO: organize in the same sections as the code in CollectionsPlume.java.
+
+  @Test
+  void testAddAllIterable() {
+    Iterable<String> itble = CollectionsPlume.listOf("a", "b");
+    Collection<String> c = new ArrayList<>();
+    CollectionsPlume.addAll(c, itble);
+    assertEquals(Arrays.asList("a", "b"), c);
+  }
+
   @Test
   public void testListOf() {
     assertEquals(Arrays.asList("a", "b"), CollectionsPlume.listOf("a", "b"));
@@ -143,16 +159,11 @@ public final class CollectionsPlumeTest {
     // public static class MergedIterator2 implements Iterator {
     assertEquals(
         iota10Twice,
-        toArrayList(
-            new CollectionsPlume.MergedIterator2<Integer>(iota10.iterator(), iota10.iterator())));
+        toArrayList(CollectionsPlume.mergedIterator2(iota10.iterator(), iota10.iterator())));
     assertEquals(
-        iota10,
-        toArrayList(
-            new CollectionsPlume.MergedIterator2<Integer>(iota0.iterator(), iota10.iterator())));
+        iota10, toArrayList(CollectionsPlume.mergedIterator2(iota0.iterator(), iota10.iterator())));
     assertEquals(
-        iota10,
-        toArrayList(
-            new CollectionsPlume.MergedIterator2<Integer>(iota10.iterator(), iota0.iterator())));
+        iota10, toArrayList(CollectionsPlume.mergedIterator2(iota10.iterator(), iota0.iterator())));
 
     // public static class MergedIterator implements Iterator {
     ArrayList<Iterator<Integer>> iota10IteratorThrice = new ArrayList<>();
@@ -161,7 +172,7 @@ public final class CollectionsPlumeTest {
     iota10IteratorThrice.add(iota10.iterator());
     assertEquals(
         iota10Thrice,
-        toArrayList(new CollectionsPlume.MergedIterator<Integer>(iota10IteratorThrice.iterator())));
+        toArrayList(CollectionsPlume.mergedIterator(iota10IteratorThrice.iterator())));
     ArrayList<Iterator<Integer>> iota10IteratorTwice1 = new ArrayList<>();
     iota10IteratorTwice1.add(iota0.iterator());
     iota10IteratorTwice1.add(iota10.iterator());
@@ -175,14 +186,11 @@ public final class CollectionsPlumeTest {
     iota10IteratorTwice3.add(iota10.iterator());
     iota10IteratorTwice3.add(iota0.iterator());
     assertEquals(
-        iota10Twice,
-        toArrayList(new CollectionsPlume.MergedIterator<Integer>(iota10IteratorTwice1.iterator())));
+        iota10Twice, toArrayList(CollectionsPlume.mergedIterator(iota10IteratorTwice1.iterator())));
     assertEquals(
-        iota10Twice,
-        toArrayList(new CollectionsPlume.MergedIterator<Integer>(iota10IteratorTwice2.iterator())));
+        iota10Twice, toArrayList(CollectionsPlume.mergedIterator(iota10IteratorTwice2.iterator())));
     assertEquals(
-        iota10Twice,
-        toArrayList(new CollectionsPlume.MergedIterator<Integer>(iota10IteratorTwice3.iterator())));
+        iota10Twice, toArrayList(CollectionsPlume.mergedIterator(iota10IteratorTwice3.iterator())));
   }
 
   @Test
@@ -198,10 +206,10 @@ public final class CollectionsPlumeTest {
     }
     assertEquals(
         iota10Odd,
-        toArrayList(
-            new CollectionsPlume.FilteredIterator<Integer>(iota10.iterator(), new OddPredicate())));
+        toArrayList(CollectionsPlume.filteredIterator(iota10.iterator(), new OddPredicate())));
   }
 
+  @SuppressWarnings("deprecation") // to be made package-private
   @Test
   public void testRemoveFirstAndLastIterator() {
 
@@ -833,5 +841,92 @@ public final class CollectionsPlumeTest {
     List<Integer> result = Arrays.asList(3, 4);
     List<Integer> myList = CollectionsPlume.listIntersection(iota5, countdown);
     assertEquals(result, myList);
+  }
+
+  private static final Map<Integer, String> tensNumberConversion = new TreeMap<>();
+
+  static {
+    tensNumberConversion.put(2, "twenty");
+    tensNumberConversion.put(3, "thirty");
+    tensNumberConversion.put(4, "forty");
+    tensNumberConversion.put(5, "fifty");
+    tensNumberConversion.put(6, "sixty");
+    tensNumberConversion.put(7, "seventy");
+    tensNumberConversion.put(8, "eighty");
+    tensNumberConversion.put(9, "ninety");
+  }
+
+  private static Map<String, Integer> giftsToQuantity1 = new TreeMap<>();
+  private static Map<String, Integer> giftsToQuantity2 = new TreeMap<>();
+  private static Map<String, Integer> giftsToQuantity3 = new TreeMap<>();
+  private static Map<String, Integer> giftsToQuantity4 = new TreeMap<>();
+
+  static {
+    giftsToQuantity1.put("partridge in a pear tree", 1);
+    giftsToQuantity1.put("turtle doves", 2);
+    giftsToQuantity1.put("French hens", 3);
+    giftsToQuantity3.put("calling birds", 4);
+    giftsToQuantity4.put("gold rings", 5);
+    giftsToQuantity4.put("geese a-laying", 6);
+    giftsToQuantity4.put("swans a-swimming", 7);
+    giftsToQuantity4.put("maids a-milking", 8);
+    giftsToQuantity4.put("ladies dancing", 9);
+    giftsToQuantity4.put("lords a-leaping", 10);
+    giftsToQuantity4.put("pipers piping", 11);
+    giftsToQuantity4.put("drummers drumming", 12);
+  }
+
+  private static final Map<String, Map<String, Integer>> allGifts = new TreeMap<>();
+
+  static {
+    allGifts.put("A", giftsToQuantity1);
+    allGifts.put("B", giftsToQuantity2);
+    allGifts.put("C", giftsToQuantity3);
+    allGifts.put("D", giftsToQuantity4);
+  }
+
+  @Test
+  public void testMapToString() {
+
+    // mapToStringMultiLine(Appendable sb, Map<K, V> m, String linePrefix) {
+    // mapMapToStringMultiLine(
+    //           Appendable sb, String innerHeader, Map<K1, Map<K2, V2>> mapMap, String linePrefix)
+    // mapToStringMultiLine(Map<K, V> m) {
+    // mapToStringMultiLine(Map<K, V> m, String linePrefix) {
+    // mapToStringAndClassMultiLine(Map<K, V> m) {
+
+    StringBuilder sb1 = new StringBuilder();
+    CollectionsPlume.mapToStringMultiLine(sb1, giftsToQuantity1, "   ");
+    assertEquals(
+        String.join(
+            lineSep,
+            "   French hens => 3",
+            "   partridge in a pear tree => 1",
+            "   turtle doves => 2",
+            ""),
+        sb1.toString());
+    StringBuilder sb2 = new StringBuilder();
+    CollectionsPlume.mapMapToStringMultiLine(sb2, "inner:", allGifts, "x");
+    assertEquals(
+        String.join(
+            lineSep,
+            "xinner:A",
+            "x  French hens => 3",
+            "x  partridge in a pear tree => 1",
+            "x  turtle doves => 2",
+            "xinner:B",
+            "xinner:C",
+            "x  calling birds => 4",
+            "xinner:D",
+            "x  drummers drumming => 12",
+            "x  geese a-laying => 6",
+            "x  gold rings => 5",
+            "x  ladies dancing => 9",
+            "x  lords a-leaping => 10",
+            "x  maids a-milking => 8",
+            "x  pipers piping => 11",
+            "x  swans a-swimming => 7",
+            ""),
+        sb2.toString());
   }
 }
