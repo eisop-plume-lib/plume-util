@@ -203,8 +203,8 @@ public class UnmodifiableIdentityHashMap<K, V> extends IdentityHashMap<K, V> {
   }
 
   @Override
-  public @Nullable V compute(
-      K key, BiFunction<? super K, ? super V, ? extends @Nullable V> remappingFunction) {
+  public @PolyNull V compute(
+      K key, BiFunction<? super K, ? super @NonNull V, ? extends @PolyNull V> remappingFunction) {
     throw new UnsupportedOperationException();
   }
 
