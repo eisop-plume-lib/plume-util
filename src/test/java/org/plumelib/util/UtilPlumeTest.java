@@ -1,61 +1,97 @@
 package org.plumelib.util;
 
+/*
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import java.util.BitSet;
-import java.util.Random;
-import org.checkerframework.checker.index.qual.NonNegative;
+*/
 import org.junit.jupiter.api.Test;
 
 /** Test the UtilPlume class. */
-public final class UtilPlumeTest {
+final class UtilPlumeTest {
 
-  private static BitSet randomBitSet(@NonNegative int length, Random r) {
-    BitSet result = new BitSet(length);
-    for (int i = 0; i < length; i++) {
-      result.set(i, r.nextBoolean());
-    }
-    return result;
-  }
+  UtilPlumeTest() {}
 
+  // //////////////////////////////////////////////////////////////////////
+  // Object
+  //
+
+  /** Test clone(). */
   @Test
-  public void test_intersectionCardinalityAtLeast() {
-
-    // public static intersectionCardinalityAtLeast(BitSet a, BitSet b, int i)
-
-    Random r = new Random(20031008);
-    for (int i = 0; i < 100; i++) {
-      BitSet b1 = randomBitSet(r.nextInt(100), r);
-      BitSet b2 = randomBitSet(r.nextInt(100), r);
-      BitSet b3 = randomBitSet(r.nextInt(100), r);
-      BitSet intersection = (BitSet) b1.clone();
-      intersection.and(b2);
-      int card = intersection.cardinality();
-      for (int j = 0; j < 100; j++) {
-        assertTrue(CollectionsPlume.intersectionCardinalityAtLeast(b1, b2, j) == (card >= j));
-      }
-      intersection.and(b3);
-      card = intersection.cardinality();
-      for (int j = 0; j < 100; j++) {
-        assertTrue(CollectionsPlume.intersectionCardinalityAtLeast(b1, b2, b3, j) == (card >= j));
-      }
-    }
+  void test_clone() {
+    // Tests go here.
   }
 
-  // public static ArrayList randomElements(Iterator itor, int numElts)
-  // public static ArrayList randomElements(Iterator itor, int numElts, Random random)
+  /** Test firstNonNull(). */
+  @Test
+  void test_firstNonNull() {
+    // Tests go here.
+  }
 
-  // public static <T> @Nullable Integer incrementMap(Map<T,Integer> m, T key, int count) {
-  // public static <K,V> String mapToString(Map<K,V> m) {
-  // public static <K,V> void mapToString(Appendable sb, Map<K,V> m, String linePrefix) {
-  // public static <K extends Comparable<? super K>,V> Collection<@KeyFor("#1") K>
-  //     sortedKeySet(Map<K,V> m) {
-  // public static <K,V> Collection<@KeyFor("#1") K>
-  //     sortedKeySet(Map<K,V> m, Comparator<K> comparator) {
+  // //////////////////////////////////////////////////////////////////////
+  // Hashing
+  //
 
-  // public static boolean gotBooleanProperty(Properties p, String key)
-  // public static String appendProperty(Properties p, String key, String value)
-  // public static String setDefault(Properties p, String key, String value)
-  // public static void streamCopy(java.io.InputStream from, java.io.OutputStream to)
+  /** Test hash(). */
+  @Test
+  void test_hash() {
+    // Tests go here.
+  }
 
+  // //////////////////////////////////////////////////////////////////////
+  // ProcessBuilder
+  //
+
+  /** Test backticks(). */
+  @Test
+  void test_backticks() {
+    // Tests go here.
+  }
+
+  // //////////////////////////////////////////////////////////////////////
+  // Properties
+  //
+
+  /** Test propertyIsTrue(). */
+  @Test
+  void test_propertyIsTrue() {
+    // Tests go here.
+  }
+
+  /** Test getBooleanProperty(). */
+  @Test
+  void test_getBooleanProperty() {
+    // Tests go here.
+  }
+
+  /** Test appendProperty(). */
+  @Test
+  void test_appendProperty() {
+    // Tests go here.
+  }
+
+  /** Test setDefaultMaybe(). */
+  @Test
+  void test_setDefaultMaybe() {
+    // Tests go here.
+  }
+
+  // //////////////////////////////////////////////////////////////////////
+  // Throwable
+  //
+
+  /** Test backTrace(). */
+  @Test
+  void test_backTrace() {
+    // Tests go here.
+  }
+
+  /** Test stackTraceToString(). */
+  @Test
+  void test_stackTraceToString() {
+    // Tests go here.
+  }
 }

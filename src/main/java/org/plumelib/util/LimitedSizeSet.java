@@ -1,6 +1,7 @@
 package org.plumelib.util;
 
 import java.io.Serializable;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import org.checkerframework.checker.index.qual.IndexOrHigh;
@@ -150,6 +151,16 @@ public class LimitedSizeSet<T extends @Nullable Object> implements Serializable,
   }
 
   /**
+   * Returns true if this is empty.
+   *
+   * @return true if this is empty
+   */
+  @Pure
+  public boolean isEmpty() {
+    return size() == 0;
+  }
+
+  /**
    * An upper bound on how many distinct elements can be individually represented in the set.
    * Returns maxValues+1 (where maxValues is the argument to the constructor).
    *
@@ -215,9 +226,9 @@ public class LimitedSizeSet<T extends @Nullable Object> implements Serializable,
    * values seen by the entire list. Returns the new object, whose maxValues is the given integer.
    *
    * @param <T> (super)type of elements of the sets
-   * @param maxValues the maximum size for the returned LimitedSizeSet
-   * @param slist a list of LimitedSizeSet, whose elements will be merged
-   * @return a LimitedSizeSet that merges the elements of slist
+   * @param maxValues the maximum size for the returned set
+   * @param slist a list of sets, whose elements will be merged
+   * @return a set that merges the elements of slist
    */
   public static <T extends @Nullable Object> LimitedSizeSet<T> merge(
       @Positive int maxValues, List<LimitedSizeSet<? extends T>> slist) {
@@ -231,6 +242,6 @@ public class LimitedSizeSet<T extends @Nullable Object> implements Serializable,
   @SideEffectFree
   @Override
   public String toString(@GuardSatisfied LimitedSizeSet<T> this) {
-    return ("[size=" + size() + "; " + (repNulled() ? "null" : ArraysPlume.toString(values)) + "]");
+    return ("[size=" + size() + "; " + Arrays.toString(values) + "]");
   }
 }

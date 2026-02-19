@@ -5,7 +5,9 @@ package org.plumelib.util;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -59,7 +61,6 @@ public final class StringsPlume {
    * @return the target with an occurrence of oldStr at the start replaced by newStr; returns the
    *     target if it does not start with oldStr
    */
-  @SuppressWarnings("index:argument") // startsWith implies indexes fit
   @SideEffectFree
   public static String replacePrefix(String target, String oldStr, String newStr) {
     if (target.startsWith(oldStr)) {
@@ -271,7 +272,7 @@ public final class StringsPlume {
   })
   @SideEffectFree
   public static List<String> splitRetainSeparators(String input, Pattern p) {
-    List<String> result = new ArrayList<String>();
+    List<String> result = new ArrayList<>();
     Matcher m = p.matcher(input);
     int pos = 0;
     while (m.find()) {
@@ -469,12 +470,15 @@ public final class StringsPlume {
             if (postEsc < i) {
               sb.append(orig.substring(postEsc, i));
             }
-            sb.append("\\");
+            sb.append('\\');
             int cAsInt = (int) c;
             sb.append(String.format("%03o", cAsInt));
             postEsc = i + 1;
             break;
           } else {
+            if (postEsc < i) {
+              sb.append(orig.substring(postEsc, i));
+            }
             sb.append("\\u");
             sb.append(String.format("%04x", (int) c));
             postEsc = i + 1;
@@ -535,7 +539,8 @@ public final class StringsPlume {
   }
 
   /**
-   * Given a character, returns a Java character literal denoting the character.
+   * Given a character, returns a Java character literal denoting the character. The return value
+   * begins and ends with a single quote mark.
    *
    * @param ch character to quote
    * @return quoted version of ch
@@ -735,7 +740,7 @@ public final class StringsPlume {
               break;
             }
             int newValue = (octalChar * 8) + thisDigit;
-            if (newValue > 0377) {
+            if (newValue > 0xFF) {
               break;
             }
             octalChar = (char) newValue;
@@ -1070,7 +1075,10 @@ public final class StringsPlume {
      * @return a negative integer, zero, or a positive integer as the first argument is less than,
      *     equal to, or greater than the second
      */
-    @SuppressWarnings("ReferenceEquality") // comparator method uses ==
+    @SuppressWarnings({
+      "ReferenceEquality",
+      "PMD.UseEqualsToCompareStrings"
+    }) // comparator method uses ==
     @Pure
     @Override
     public int compare(@Nullable String s1, @Nullable String s2) {
@@ -1241,18 +1249,17 @@ public final class StringsPlume {
     /** Creates a new VersionNumberComparator. */
     public VersionNumberComparator() {}
 
-    @SuppressWarnings("StringSplitter") // OK given that the arguments are version numbers.
     @Override
     public int compare(String s1, String s2) {
       if (s1.equals(s2)) {
         return 0;
       }
-      String[] components1 = s1.split("\\.");
-      String[] components2 = s2.split("\\.");
+      String[] components1 = s1.split("\\.", -1);
+      String[] components2 = s2.split("\\.", -1);
       int len = Math.min(components1.length, components2.length);
       for (int i = 0; i < len; i++) {
-        int int1 = Integer.valueOf(components1[i]);
-        int int2 = Integer.valueOf(components2[i]);
+        int int1 = Integer.parseInt(components1[i]);
+        int int2 = Integer.parseInt(components2[i]);
         if (int1 < int2) {
           return -1;
         } else if (int1 > int2) {
@@ -1472,7 +1479,7 @@ public final class StringsPlume {
   }
 
   // //////////////////////////////////////////////////////////////////////
-  // Miscellaneous
+  // English text
   //
 
   /**
@@ -1482,18 +1489,105 @@ public final class StringsPlume {
    *
    * @param n count of nouns
    * @param noun word being counted; must not be the empty string
-   * @return noun, if n==1; otherwise, pluralization of noun
-   * @throws IllegalArgumentException if the length of noun is 0
+   * @return {@code noun}, if n==1; otherwise, pluralization of {@code noun}
+   * @throws IllegalArgumentException if the length of {@code noun} is 0
+   * @deprecated use {@link #nPlural(int, String)}
    */
+  @Deprecated // 2025-07-16
   @SideEffectFree
   public static String nplural(int n, String noun) {
+    return nPlural(n, noun);
+  }
+
+  /** Exceptions to the usual English noun pluralization rules. */
+  private static final Map<String, String> nPluralExceptions = new HashMap<>();
+
+  static {
+    // No change
+    nPluralExceptions.put("bison", "bison");
+    nPluralExceptions.put("buffalo", "buffalo");
+    nPluralExceptions.put("carp", "carp");
+    nPluralExceptions.put("chassis", "chassis");
+    nPluralExceptions.put("cod", "cod");
+    nPluralExceptions.put("deer", "deer");
+    nPluralExceptions.put("fish", "fish");
+    nPluralExceptions.put("kakapo", "kakapo");
+    nPluralExceptions.put("neat", "neat");
+    nPluralExceptions.put("pike", "pike");
+    nPluralExceptions.put("salmon", "salmon");
+    nPluralExceptions.put("series", "series");
+    nPluralExceptions.put("sheep", "sheep");
+    nPluralExceptions.put("shrimp", "shrimp");
+    nPluralExceptions.put("species", "species");
+    nPluralExceptions.put("squid", "squid");
+    nPluralExceptions.put("trout", "trout");
+
+    // Native American tribe names
+
+    nPluralExceptions.put("Cherokee", "Cherokee");
+    nPluralExceptions.put("Cree", "Cree");
+    nPluralExceptions.put("Comanche", "Comanche");
+    nPluralExceptions.put("Delaware", "Delaware");
+    nPluralExceptions.put("Hopi", "Hopi");
+    nPluralExceptions.put("Iroquois", "Iroquois");
+    nPluralExceptions.put("Kiowa", "Kiowa");
+    nPluralExceptions.put("Navajo", "Navajo");
+    nPluralExceptions.put("Ojibwa", "Ojibwa");
+    nPluralExceptions.put("Sioux", "Sioux");
+    nPluralExceptions.put("Zuni", "Zuni");
+
+    // Ending in "y"
+    nPluralExceptions.put("lay-by", "lay-bys");
+    nPluralExceptions.put("stand-by", "stand-bys");
+
+    // Ending in "i"
+    nPluralExceptions.put("alkali", "alkalies");
+
+    // Plural ending in "en"
+    nPluralExceptions.put("ox", "oxen");
+    nPluralExceptions.put("child", "children");
+
+    // Apophonic plurals
+    nPluralExceptions.put("foot", "feet");
+    nPluralExceptions.put("goose", "geese");
+    nPluralExceptions.put("louse", "lice");
+    nPluralExceptions.put("dormouse", "dormice");
+    nPluralExceptions.put("man", "men");
+    nPluralExceptions.put("mouse", "mice");
+    nPluralExceptions.put("tooth", "teeth");
+    nPluralExceptions.put("woman", "women");
+
+    // Miscellaneous irregular plurals
+    nPluralExceptions.put("person", "people");
+  }
+
+  /**
+   * Returns either "n <em>noun</em>" or "n <em>noun</em>s" depending on {@code n}. Adds "es" to
+   * words ending with "ch", "s", "sh", or "x". Adds "ies" to words ending with "y" when the
+   * previous letter is a consonant. Handles some irregular nouns.
+   *
+   * @param n count of nouns
+   * @param noun word being counted; must not be the empty string
+   * @return {@code noun}, if n==1; otherwise, pluralization of {@code noun}
+   * @throws IllegalArgumentException if the length of {@code noun} is 0
+   */
+  @SideEffectFree
+  public static String nPlural(int n, String noun) {
     if (noun.isEmpty()) {
       throw new IllegalArgumentException(
-          "The second argument to nplural must not be an empty string");
+          "The second argument to nPlural must not be an empty string");
     }
     if (n == 1) {
       return n + " " + noun;
     }
+    String irregular = nPluralExceptions.get(noun);
+    if (irregular != null) {
+      return n + " " + irregular;
+    }
+
+    // TODO: handle more from https://en.wikipedia.org/wiki/English_plurals ,
+    // and organize `nPluralExceptions` and the code the same as it.
+
     char lastLetter = noun.charAt(noun.length() - 1);
     char penultimateLetter = (noun.length() == 1) ? '\u0000' : noun.charAt(noun.length() - 2);
     if ((penultimateLetter == 'c' && lastLetter == 'h')
@@ -1510,13 +1604,217 @@ public final class StringsPlume {
             && penultimateLetter != 'u')) {
       return n + " " + noun.substring(0, noun.length() - 1) + "ies";
     }
+
+    // TODO:  Change nouns ending in "f" or "fe" to "ves" (knives, leaves, lives, wolves, calves),
+    // but beware that there are exceptions (roofs, fifes).
+
+    // TODO:
+    // Singular nouns ending in o preceded by a consonant in many cases spell the plural by adding
+    // -es: heroes,	potatoes, echoes.
+    // However, many nouns of foreign origin, including almost all Italian loanwords, add only -s:
+    // And also some other exceptions like volcanos.
+
     return n + " " + noun + "s";
+  }
+
+  /**
+   * Returns either "n <em>noun</em>" or "n <em>noun</em>s" depending on the size of the collection.
+   * Adds "es" to words ending with "ch", "s", "sh", or "x". Adds "ies" to words ending with "y"
+   * when the previous letter is a consonant.
+   *
+   * @param c a collection whose size to test
+   * @param noun word being counted; must not be the empty string
+   * @return {@code noun}, if {@code c} has size 1; otherwise, pluralization of {@code noun}
+   * @throws IllegalArgumentException if the length of {@code noun} is 0
+   */
+  @SideEffectFree
+  public static String nPlural(Collection<?> c, String noun) {
+    return nPlural(c.size(), noun);
+  }
+
+  /**
+   * Returns either "n <em>noun</em>" or "n <em>noun</em>s" depending on the size of the collection.
+   * Adds "es" to words ending with "ch", "s", "sh", or "x". Adds "ies" to words ending with "y"
+   * when the previous letter is a consonant.
+   *
+   * @param m a map whose size to test
+   * @param noun word being counted; must not be the empty string
+   * @return {@code noun}, if {@code m} has size 1; otherwise, pluralization of {@code noun}
+   * @throws IllegalArgumentException if the length of {@code noun} is 0
+   */
+  @SideEffectFree
+  public static String nPlural(Map<?, ?> m, String noun) {
+    return nPlural(m.size(), noun);
+  }
+
+  /**
+   * Returns either "n <em>noun</em>" or "n <em>noun</em>s" depending on the size of the collection.
+   * Adds "es" to words ending with "ch", "s", "sh", or "x". Adds "ies" to words ending with "y"
+   * when the previous letter is a consonant.
+   *
+   * @param <T> the type of array elements
+   * @param a an array whose size to test
+   * @param noun word being counted; must not be the empty string
+   * @return {@code noun}, if {@code a} has size 1; otherwise, pluralization of {@code noun}
+   * @throws IllegalArgumentException if the length of {@code noun} is 0
+   */
+  @SideEffectFree
+  public static <T> String nPlural(T[] a, String noun) {
+    return nPlural(a.length, noun);
+  }
+
+  /** Exceptions to the usual English verb pluralization rules. */
+  private static final Map<String, String> vPluralExceptions = new HashMap<>();
+
+  static {
+    vPluralExceptions.put("is", "are");
+    vPluralExceptions.put("was", "were");
+  }
+
+  /**
+   * Returns either the singular or plural form of the given verb, depending on {@code n}. Most
+   * English verbs have the same singular and plural form.
+   *
+   * <p>The implementation of this method hard-codes some irregular verbs, and otherwise returns its
+   * argument.
+   *
+   * @param n count
+   * @param verb verb whose subject is one or more things, depending on {@code n}
+   * @return {@code verb}, if n==1; otherwise, pluralization of {@code verb}
+   */
+  @SideEffectFree
+  public static String vPlural(int n, String verb) {
+    if (n == 1) {
+      return verb;
+    }
+    return vPluralExceptions.getOrDefault(verb, verb);
+  }
+
+  /**
+   * Returns either the singular or plural form of the given verb, depending on the size of the
+   * collection. Most English verbs have the same singular and plural form.
+   *
+   * <p>The implementation of this method hard-codes some irregular verbs, and otherwise returns its
+   * argument.
+   *
+   * @param c a collection
+   * @param verb verb whose subject is one or more things, depending on the size of the collection
+   * @return {@code verb}, if n==1; otherwise, pluralization of {@code verb}
+   */
+  @SideEffectFree
+  public static String vPlural(Collection<?> c, String verb) {
+    return vPlural(c.size(), verb);
+  }
+
+  /**
+   * Returns either the singular or plural form of the given verb, depending on the size of the
+   * collection. Most English verbs have the same singular and plural form.
+   *
+   * <p>The implementation of this method hard-codes some irregular verbs, and otherwise returns its
+   * argument.
+   *
+   * @param m a map
+   * @param verb verb whose subject is one or more things, depending on the size of the collection
+   * @return {@code verb}, if n==1; otherwise, pluralization of {@code verb}
+   */
+  @SideEffectFree
+  public static String vPlural(Map<?, ?> m, String verb) {
+    return vPlural(m.size(), verb);
+  }
+
+  /**
+   * Returns either the singular or plural form of the given verb, depending on the size of the
+   * collection. Most English verbs have the same singular and plural form.
+   *
+   * <p>The implementation of this method hard-codes some irregular verbs, and otherwise returns its
+   * argument.
+   *
+   * @param <T> the type of array elements
+   * @param a an array
+   * @param verb verb whose subject is one or more things, depending on the size of the collection
+   * @return {@code verb}, if n==1; otherwise, pluralization of {@code verb}
+   */
+  @SideEffectFree
+  public static <T> String vPlural(T[] a, String verb) {
+    return vPlural(a.length, verb);
+  }
+
+  /**
+   * Returns either the singular or plural form of the noun and verb, depending on {@code n}.
+   *
+   * <p>Example uses:
+   *
+   * <pre>{@code
+   * StringsPlume.nvPlural(0, "fox", "was")  =  "0 foxes were"
+   * StringsPlume.nvPlural(1, "fox", "was")  =  "1 fox was"
+   * StringsPlume.nvPlural(2, "fox", "was")  =  "2 foxes were"
+   * }</pre>
+   *
+   * @param n count
+   * @param noun word being counted; must not be the empty string
+   * @param verb verb whose subject is one or more things, depending on {@code n}
+   * @return {@code noun verb}, if n==1; otherwise, its pluralization
+   * @see #nPlural(int, String)
+   * @see #vPlural(int, String)
+   */
+  @SideEffectFree
+  public static String nvPlural(int n, String noun, String verb) {
+    return nPlural(n, noun) + " " + vPlural(n, verb);
+  }
+
+  /**
+   * Returns either the singular or plural form of the given noun and verb, depending on the size of
+   * the collection.
+   *
+   * @param c a collection
+   * @param noun word being counted; must not be the empty string
+   * @param verb verb whose subject is one or more things, depending on the size of the collection
+   * @return {@code noun verb}, if n==1; otherwise, its pluralization
+   * @see #nPlural(int, String)
+   * @see #vPlural(int, String)
+   */
+  @SideEffectFree
+  public static String nvPlural(Collection<?> c, String noun, String verb) {
+    return nvPlural(c.size(), noun, verb);
+  }
+
+  /**
+   * Returns either the singular or plural form of the given noun and verb, depending on the size of
+   * the collection.
+   *
+   * @param m a map
+   * @param noun word being counted; must not be the empty string
+   * @param verb verb whose subject is one or more things, depending on the size of the collection
+   * @return {@code noun verb}, if n==1; otherwise, its pluralization
+   * @see #nPlural(int, String)
+   * @see #vPlural(int, String)
+   */
+  @SideEffectFree
+  public static String nvPlural(Map<?, ?> m, String noun, String verb) {
+    return nvPlural(m.size(), noun, verb);
+  }
+
+  /**
+   * Returns either the singular or plural form of the given noun and verb, depending on the size of
+   * the collection.
+   *
+   * @param <T> the type of array elements
+   * @param a an array
+   * @param noun word being counted; must not be the empty string
+   * @param verb verb whose subject is one or more things, depending on the size of the collection
+   * @return {@code noun verb}, if n==1; otherwise, its pluralization
+   * @see #nPlural(int, String)
+   * @see #vPlural(int, String)
+   */
+  @SideEffectFree
+  public static <T> String nvPlural(T[] a, String noun, String verb) {
+    return nvPlural(a.length, noun, verb);
   }
 
   /**
    * Creates a conjunction or disjunction, like "a", "a or b", and "a, b, or c". Obeys the "serial
    * comma" or "Oxford comma" rule: when the list has size 3 or larger, puts a comma after every
-   * element but the last.
+   * element (except the last one, which ends the list).
    *
    * @param conjunction the conjunction word, like "and" or "or"
    * @param elements the elements of the conjunction or disjunction
@@ -1545,6 +1843,10 @@ public final class StringsPlume {
     sj.add(conjunction + " " + elements.get(size - 1));
     return sj.toString();
   }
+
+  // //////////////////////////////////////////////////////////////////////
+  // Miscellaneous
+  //
 
   /**
    * Returns the number of times the character appears in the string.
@@ -1603,14 +1905,14 @@ public final class StringsPlume {
 
     if (val < 1000) {
       // nothing to do
-    } else if (val < 1000000) {
+    } else if (val < 1_000_000) {
       dval = val / 1000.0;
       mag = "K";
-    } else if (val < 1000000000) {
-      dval = val / 1000000.0;
+    } else if (val < 1_000_000_000) {
+      dval = val / 1_000_000.0;
       mag = "M";
     } else {
-      dval = val / 1000000000.0;
+      dval = val / 1_000_000_000.0;
       mag = "G";
     }
 

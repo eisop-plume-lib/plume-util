@@ -5,7 +5,7 @@
  *
  * <p>Note that <a
  * href="http://plumelib.org/hashmap-util/api/org/plumelib/util/package-summary.html#package.description">HashMap
- * Util</a> defines other classes in the <code>org.plumelib.util</code> package.
+ * Util</a> defines other classes in the {@code org.plumelib.util} package.
  *
  * <h3 id="Collections_and_iterators">Collections and iterators</h3>
  *
@@ -31,6 +31,11 @@
  *   <dd>Given two sequences/iterators/whatever, OrderedPairIterator returns a new
  *       sequence/iterator/whatever that pairs the matching elements of the inputs, according to
  *       their respective sort orders. (This operation is sometimes called "zipping".)
+ *   <dt>{@link org.plumelib.util.SIList SIList}
+ *   <dd>An immutable list implementation that can share substructure, for time and space
+ *       efficiency. Use this only if you will be creating many lists that share structure. Examples
+ *       are when one list is the concatenation of other lists, or one list is just like another
+ *       with a single element added.
  *   <dt>{@link org.plumelib.util.Hasher Hasher}
  *   <dd>See <a href="http://plumelib.org/hashmap-util/api/org/plumelib/util/Hasher.html">HashMap
  *       Util</a>.
@@ -49,8 +54,8 @@
  * <dl>
  *   <dt>{@link org.plumelib.util.EntryReader EntryReader}
  *   <dd>Class that reads "entries" from a file. In the simplest case, entries can be lines. It
- *       supports: include files, comments, and multi-line entries (paragraphs). The syntax of each
- *       of these is customizable.
+ *       supports: include files, single-line comments, multi-line comments, multi-line entries
+ *       (paragraphs), and Markdown fenced code blocks. The syntax of each of these is customizable.
  *   <dt>{@link org.plumelib.util.FileIOException FileIOException}
  *   <dd>Extends IOException by also reporting a file name and line number at which the exception
  *       occurred.

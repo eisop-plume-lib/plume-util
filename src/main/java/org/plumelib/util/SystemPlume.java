@@ -26,7 +26,7 @@ public final class SystemPlume {
   //
 
   /**
-   * Determines whether a system property has a string value that represents true: "true", "yes", or
+   * Returns true if a system property has a string value that represents true: "true", "yes", or
    * "1". Errs if the property is set to a value that is not one of "true", "false", "yes", "no",
    * "1", or "0".
    *
@@ -41,7 +41,7 @@ public final class SystemPlume {
   }
 
   /**
-   * Determines whether a system property has a string value that represents true: "true", "yes", or
+   * Returns true if a system property has a string value that represents true: "true", "yes", or
    * "1". Errs if the property is set to a value that is not one of "true", "false", "yes", "no",
    * "1", or "0".
    *
@@ -57,6 +57,7 @@ public final class SystemPlume {
   // Sleep
   //
 
+  // TODO: Add the nanosecond version.
   /**
    * Like Thread.sleep, but does not throw any checked exceptions, so it is easier for clients to
    * use. Causes the currently executing thread to sleep (temporarily cease execution) for the
@@ -108,6 +109,7 @@ public final class SystemPlume {
    * Perform garbage collection. Like System.gc, but waits to return until garbage collection has
    * completed.
    */
+  @SuppressWarnings("PMD.DoNotCallGarbageCollectionExplicitly")
   public static void gc() {
     long oldCollectionCount = getCollectionCount();
     System.gc();
@@ -267,7 +269,7 @@ public final class SystemPlume {
    * @return a GC usage message string, or null
    */
   public static @Nullable String gcUsageMessage(double cpuThreshold, int seconds) {
-    double gcPercentage = SystemPlume.gcPercentage(seconds);
+    double gcPercentage = gcPercentage(seconds);
     if (gcPercentage < cpuThreshold) {
       return null;
     } else {
