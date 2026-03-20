@@ -52,9 +52,11 @@ dependencies {
   testImplementation("org.junit.jupiter:junit-jupiter:5.14.3")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-  // EISOP Checker Framework dependencies
-  checkerQual("io.github.eisop:checker-qual:${eisopVersion}")
-  checkerFramework("io.github.eisop:checker:${eisopVersion}")
+  // EISOP Checker Framework dependencies, if not "local"
+  if (project.hasProperty('cfVersion') ? !project.property('cfVersion').equals("local") : true) {
+    checkerQual("io.github.eisop:checker-qual:${eisopVersion}")
+    checkerFramework("io.github.eisop:checker:${eisopVersion}")
+  }
 }
 
 java {
@@ -180,7 +182,7 @@ checkerFramework {
   ]
   extraJavacArgs = [
     "-Werror",
-    // "-Aversion",
+    "-Aversion",
     // "-verbose",
     "-AcheckPurityAnnotations",
     "-ArequirePrefixInWarningSuppressions",
