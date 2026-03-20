@@ -402,7 +402,6 @@ public class ArraySet<E extends @UnknownSignedness @Nullable Object> extends Abs
     @Override
     @SuppressWarnings({
       "cast", // cast to (E) because it isn't outside the range
-      "nullness:return" // is in range
     })
     public final E next() {
       if (!hasNext()) {
@@ -440,7 +439,6 @@ public class ArraySet<E extends @UnknownSignedness @Nullable Object> extends Abs
 
   @SuppressWarnings({
     "cast", // cast to (E) because it isn't outside the range
-    "nullness:argument" // is in range
   })
   @Override
   public void forEach(Consumer<? super E> action) {
@@ -497,9 +495,11 @@ public class ArraySet<E extends @UnknownSignedness @Nullable Object> extends Abs
    * Sorts the internal representation of this. Side-effects the representation, but not the
    * abstract value, of this. Requires that the elements of this are comparable.
    */
-  @SuppressWarnings(
-      "signedness:argument" // unsigned values (forbidden by precondiditon) cannot be sorted
-  )
+  @SuppressWarnings({
+    "signedness:argument", // unsigned values (forbidden by precondiditon) cannot be sorted
+    "nullness" // TODO: null values in array itself would cause NPE! typetools annotations are
+    // incorrect.
+  })
   public void sort() {
     if (values != null) {
       Arrays.sort(values, 0, size);
