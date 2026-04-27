@@ -1250,7 +1250,7 @@ public final class CollectionsPlume {
   public static <T> Iterable<T> iteratorToIterable(final Iterator<T> source) {
     Objects.requireNonNull(source);
     return new Iterable<T>() {
-      /** True if this Iterable object has been used. */
+      /* True if this Iterable object has been used. */
       private AtomicBoolean used = new AtomicBoolean();
 
       @Override
