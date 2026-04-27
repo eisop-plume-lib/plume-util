@@ -49,7 +49,7 @@ dependencies {
   // error_prone_annotations.  (Even if the dependency is "compileOnly".)
   // implementation("com.google.errorprone:error_prone_annotations:${errorproneVersion}")
 
-  testImplementation("org.junit.jupiter:junit-jupiter:5.14.3")
+  testImplementation("org.junit.jupiter:junit-jupiter:5.14.4")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
   // EISOP Checker Framework dependencies, if not "local"
