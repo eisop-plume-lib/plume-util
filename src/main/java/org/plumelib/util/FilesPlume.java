@@ -1313,7 +1313,8 @@ public final class FilesPlume {
    * @param is input stream to read
    * @return a String containing all the characters from the input stream
    */
-  @SuppressWarnings("JdkObsolete") // due to use of string "UTF-8", remove in Java 11+
+  // due to use of string "UTF-8", remove in Java 11+
+  @SuppressWarnings({"JdkObsolete", "PMD.UseStandardCharsets"})
   public static String streamString(InputStream is) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     streamCopy(is, baos);
