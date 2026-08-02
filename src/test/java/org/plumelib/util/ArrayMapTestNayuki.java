@@ -34,10 +34,7 @@ import java.util.Map;
 import java.util.Random;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings({
-  "nullness", // Should be removed after CF 3.12.1 is released.
-  "PMD", // Third-party-derived test code.
-})
+@SuppressWarnings("PMD") // Third-party-derived test code.
 final class ArrayMapTestNayuki {
 
   /* Utilities */
