@@ -221,11 +221,14 @@ if (useJdkVersionInt >= 11) {
       "org.checkerframework.checker.lock.LockChecker",
       "org.checkerframework.checker.nullness.NullnessChecker",
       "org.checkerframework.checker.regex.RegexChecker",
-      "org.checkerframework.checker.resourceleak.ResourceLeakChecker",
       "org.checkerframework.checker.signature.SignatureChecker",
       "org.checkerframework.checker.signedness.SignednessChecker",
       "org.checkerframework.common.initializedfields.InitializedFieldsChecker",
     ]
+    // In JDK 26+, Process implements AutoCloseable, but plume-util targets Java 11.
+    if (useJdkVersionInt < 26) {
+      checkers.add("org.checkerframework.checker.resourceleak.ResourceLeakChecker")
+    }
     extraJavacArgs = [
       "-Werror",
       "-AnoJreVersionCheck",
