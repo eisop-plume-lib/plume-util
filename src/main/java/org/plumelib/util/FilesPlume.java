@@ -24,7 +24,6 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Reader;
 import java.io.UncheckedIOException;
-import java.io.UnsupportedEncodingException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.FileAlreadyExistsException;
@@ -1313,18 +1312,10 @@ public final class FilesPlume {
    * @param is input stream to read
    * @return a String containing all the characters from the input stream
    */
-  @SuppressWarnings("JdkObsolete") // due to use of string "UTF-8", remove in Java 11+
   public static String streamString(InputStream is) {
     ByteArrayOutputStream baos = new ByteArrayOutputStream();
     streamCopy(is, baos);
-    // In Java 11: String result = baos.toString(UTF_8);
-    String result;
-    try {
-      result = baos.toString("UTF-8");
-    } catch (UnsupportedEncodingException e) {
-      throw new UncheckedIOException(e);
-    }
-    return result;
+    return baos.toString(UTF_8);
   }
 
   /**
