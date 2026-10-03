@@ -61,7 +61,9 @@ public final class StringsPlume {
    * @return the target with an occurrence of oldStr at the start replaced by newStr; returns the
    *     target if it does not start with oldStr
    */
-  @SuppressWarnings("index:argument.type.incompatible") // TODO: checker change?
+  // The first suppression is needed by Checker Framework versions before 3.53.1; from 3.53.1 on the
+  // Index Checker refines the upper bound after startsWith(), so it would be reported as unneeded.
+  @SuppressWarnings({"index:argument.type.incompatible", "index:unneeded.suppression"})
   @SideEffectFree
   public static String replacePrefix(String target, String oldStr, String newStr) {
     if (target.startsWith(oldStr)) {
