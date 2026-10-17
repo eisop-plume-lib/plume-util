@@ -400,8 +400,13 @@ public class ArraySet<E extends @UnknownSignedness @Nullable Object> extends Abs
     }
 
     @Override
+    // The element is not outside the range, so it is an E.  Before EISOP Checker Framework
+    // eisop#2011, the cast to (E) dropped the @Nullable of `result`; since then the cast keeps it
+    // and the Nullness Checker reports the return.
     @SuppressWarnings({
       "cast", // cast to (E) because it isn't outside the range
+      "nullness:return",
+      "nullness:unneeded.suppression"
     })
     public final E next() {
       if (!hasNext()) {
@@ -437,8 +442,13 @@ public class ArraySet<E extends @UnknownSignedness @Nullable Object> extends Abs
 
   // Defaultable methods
 
+  // The element is not outside the range, so it is an E.  Before EISOP Checker Framework
+  // eisop#2011, the cast to (E) dropped the @Nullable of `e`; since then the cast keeps it and the
+  // Nullness Checker reports the argument.
   @SuppressWarnings({
     "cast", // cast to (E) because it isn't outside the range
+    "nullness:argument",
+    "nullness:unneeded.suppression"
   })
   @Override
   public void forEach(Consumer<? super E> action) {
