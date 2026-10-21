@@ -359,6 +359,25 @@ public class ArraySet<E extends @UnknownSignedness @Nullable Object> extends Abs
     }
   }
 
+  /**
+   * Returns an element of the array of values. The array is null-padded, so its elements are
+   * nullable, but an element in the range {@code [0, size)} is an {@code E}, which may itself be
+   * null if {@code E} is nullable.
+   *
+   * @param element an element of the array of values that is in the range {@code [0, size)}
+   * @return {@code element}, as an {@code E}
+   */
+  @SuppressWarnings({
+    "cast", // cast to (E) because it isn't outside the range
+    "nullness:return", // the null padding is outside the range
+    // TODO: Remove this suppression when the minimum EISOP Checker Framework version always
+    // reports the return.
+    "nullness:unneeded.suppression"
+  })
+  private E elementAsE(@Nullable E element) {
+    return (E) element;
+  }
+
   // //////////////////////////////////////////////////////////////////////
   // iterators
 
@@ -400,16 +419,12 @@ public class ArraySet<E extends @UnknownSignedness @Nullable Object> extends Abs
     }
 
     @Override
-    @SuppressWarnings({
-      "cast", // cast to (E) because it isn't outside the range
-    })
     public final E next() {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }
       removed = false;
-      E result = values[index++];
-      return (E) result;
+      return elementAsE(values[index++]);
     }
 
     /** Removes the previously-returned element. */
@@ -437,9 +452,6 @@ public class ArraySet<E extends @UnknownSignedness @Nullable Object> extends Abs
 
   // Defaultable methods
 
-  @SuppressWarnings({
-    "cast", // cast to (E) because it isn't outside the range
-  })
   @Override
   public void forEach(Consumer<? super E> action) {
     Objects.requireNonNull(action);
@@ -454,7 +466,7 @@ public class ArraySet<E extends @UnknownSignedness @Nullable Object> extends Abs
       } catch (IndexOutOfBoundsException exc) {
         throw new ConcurrentModificationException(exc);
       }
-      action.accept((E) e);
+      action.accept(elementAsE(e));
     }
     if (oldSizeModificationCount != sizeModificationCount) {
       throw new ConcurrentModificationException();
