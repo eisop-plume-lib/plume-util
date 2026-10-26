@@ -1575,26 +1575,10 @@ public final class CollectionsPlume {
     /** A marker object, distinct from any object that the iterator can return. */
     @SuppressWarnings({
       // The cast result has the qualifier of its operand, which T need not accept.
-      "formatter:assignment",
-      "index:assignment",
-      "signedness:assignment",
-      "rlccalledmethods:assignment",
-      "initializedfields:assignment",
-      "signature:assignment",
-      "regex:assignment",
-      "lock:assignment",
-      "interning:assignment",
+      "allcheckers:assignment.type.incompatible",
       // TODO: Remove these suppressions when the minimum EISOP Checker Framework version always
       // reports the assignment.
-      "formatter:unneeded.suppression",
-      "index:unneeded.suppression",
-      "signedness:unneeded.suppression",
-      "rlccalledmethods:unneeded.suppression",
-      "initializedfields:unneeded.suppression",
-      "signature:unneeded.suppression",
-      "regex:unneeded.suppression",
-      "lock:unneeded.suppression",
-      "interning:unneeded.suppression",
+      "allcheckers:unneeded.suppression",
       "unchecked"
     })
     T invalidT = (T) new Object();
@@ -1667,26 +1651,10 @@ public final class CollectionsPlume {
     /** A marker object, distinct from any object that the iterator can return. */
     @SuppressWarnings({
       // The cast result has the qualifier of its operand, which T need not accept.
-      "formatter:assignment",
-      "index:assignment",
-      "signedness:assignment",
-      "rlccalledmethods:assignment",
-      "initializedfields:assignment",
-      "signature:assignment",
-      "regex:assignment",
-      "lock:assignment",
-      "interning:assignment",
+      "allcheckers:assignment.type.incompatible",
       // TODO: Remove these suppressions when the minimum EISOP Checker Framework version always
       // reports the assignment.
-      "formatter:unneeded.suppression",
-      "index:unneeded.suppression",
-      "signedness:unneeded.suppression",
-      "rlccalledmethods:unneeded.suppression",
-      "initializedfields:unneeded.suppression",
-      "signature:unneeded.suppression",
-      "regex:unneeded.suppression",
-      "lock:unneeded.suppression",
-      "interning:unneeded.suppression",
+      "allcheckers:unneeded.suppression",
       "unchecked"
     })
     T nothing = (T) new Object();
