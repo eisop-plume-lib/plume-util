@@ -68,6 +68,25 @@ public final class UtilPlume {
   @SuppressWarnings({
     "nullness:return", // result of clone() is non-null
     "signedness", // signedness is not relevant
+    // The cast result has the qualifier of its operand, which T need not accept.
+    "formatter:return",
+    "index:return",
+    "rlccalledmethods:return",
+    "initializedfields:return",
+    "signature:return",
+    "regex:return",
+    "lock:return",
+    "interning:return",
+    // TODO: Remove these suppressions when the minimum EISOP Checker Framework version always
+    // reports the return.
+    "formatter:unneeded.suppression",
+    "index:unneeded.suppression",
+    "rlccalledmethods:unneeded.suppression",
+    "initializedfields:unneeded.suppression",
+    "signature:unneeded.suppression",
+    "regex:unneeded.suppression",
+    "lock:unneeded.suppression",
+    "interning:unneeded.suppression",
     "unchecked"
   })
   public static <T> @PolyNull @PolySigned T clone(@PolyNull @PolySigned T data) {
