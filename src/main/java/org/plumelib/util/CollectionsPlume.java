@@ -1573,7 +1573,14 @@ public final class CollectionsPlume {
     }
 
     /** A marker object, distinct from any object that the iterator can return. */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({
+      // The cast result has the qualifier of its operand, which T need not accept.
+      "allcheckers:assignment.type.incompatible",
+      // TODO: Remove the unneeded.suppression key when the minimum EISOP Checker Framework
+      // version always reports the assignment.
+      "allcheckers:unneeded.suppression",
+      "unchecked"
+    })
     T invalidT = (T) new Object();
 
     /**
@@ -1642,7 +1649,14 @@ public final class CollectionsPlume {
     Iterator<T> itor;
 
     /** A marker object, distinct from any object that the iterator can return. */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({
+      // The cast result has the qualifier of its operand, which T need not accept.
+      "allcheckers:assignment.type.incompatible",
+      // TODO: Remove the unneeded.suppression key when the minimum EISOP Checker Framework
+      // version always reports the assignment.
+      "allcheckers:unneeded.suppression",
+      "unchecked"
+    })
     T nothing = (T) new Object();
 
     // I don't think this works, because the iterator might itself return null
