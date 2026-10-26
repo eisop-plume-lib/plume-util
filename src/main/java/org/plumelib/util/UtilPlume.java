@@ -70,8 +70,8 @@ public final class UtilPlume {
     "signedness", // signedness is not relevant
     // The cast result has the qualifier of its operand, which T need not accept.
     "allcheckers:return.type.incompatible",
-    // TODO: Remove these suppressions when the minimum EISOP Checker Framework version always
-    // reports the return.
+    // TODO: Remove the unneeded.suppression key when the minimum EISOP Checker Framework
+    // version always reports the return.
     "allcheckers:unneeded.suppression",
     "unchecked"
   })

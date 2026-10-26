@@ -1576,8 +1576,8 @@ public final class CollectionsPlume {
     @SuppressWarnings({
       // The cast result has the qualifier of its operand, which T need not accept.
       "allcheckers:assignment.type.incompatible",
-      // TODO: Remove these suppressions when the minimum EISOP Checker Framework version always
-      // reports the assignment.
+      // TODO: Remove the unneeded.suppression key when the minimum EISOP Checker Framework
+      // version always reports the assignment.
       "allcheckers:unneeded.suppression",
       "unchecked"
     })
@@ -1652,8 +1652,8 @@ public final class CollectionsPlume {
     @SuppressWarnings({
       // The cast result has the qualifier of its operand, which T need not accept.
       "allcheckers:assignment.type.incompatible",
-      // TODO: Remove these suppressions when the minimum EISOP Checker Framework version always
-      // reports the assignment.
+      // TODO: Remove the unneeded.suppression key when the minimum EISOP Checker Framework
+      // version always reports the assignment.
       "allcheckers:unneeded.suppression",
       "unchecked"
     })
