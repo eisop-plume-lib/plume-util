@@ -30,6 +30,7 @@ import org.checkerframework.dataflow.qual.SideEffectFree;
  */
 @SuppressWarnings({
   "identity", // use of Hasher for primitive wrappers
+  "UndefinedEquals", // the maps of arrays compare keys with a Hasher, not equals()
   "PMD.UseDiamondOperator"
 })
 public final class Intern {

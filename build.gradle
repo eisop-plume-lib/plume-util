@@ -188,6 +188,7 @@ if (isJava21orHigher) {
       disable("ExtendsObject") // Incorrect when using the Checker Framework.
       disable("InlineMeSuggester") // Using `@InlineMe` requires clients to declare a dependency on error_prone_annotations.
       disable("PatternMatchingInstanceof") // requires Java 16 or later
+      disable("PreferCharsetOverload") // The API takes charset names, and reports a bad one with an IOException.
       disable("ReferenceEquality") // Use Interning Checker instead.
       disable("StatementSwitchToExpressionSwitch") // requires Java 12 or later
       disable("StringConcatToTextBlock") // requires Java 15 or later
