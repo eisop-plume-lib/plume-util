@@ -993,7 +993,7 @@ public final class CollectionsPlume {
             "unchecked", // Java warning about generic cast
             "signedness:method.invocation" // generics problem; #979?
           })
-          int comparison = ((Comparable<T>) elt1).compareTo(elt2);
+          int comparison = ((Comparable<@NonNull T>) elt1).compareTo(elt2);
           if (comparison > 0) {
             return false;
           } else if (comparison == 0) {
