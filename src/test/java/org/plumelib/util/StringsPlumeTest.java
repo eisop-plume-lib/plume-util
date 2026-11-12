@@ -1,6 +1,7 @@
 package org.plumelib.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -131,7 +132,7 @@ final class StringsPlumeTest {
   /** Test firstLineSeparator(). */
   @Test
   void test_firstLineSeparator() {
-    assertEquals(null, StringsPlume.firstLineSeparator("hello"));
+    assertNull(StringsPlume.firstLineSeparator("hello"));
     assertEquals("\n", StringsPlume.firstLineSeparator("hello\ngoodbye"));
     assertEquals("\n", StringsPlume.firstLineSeparator("hello\ngoodbye\rau revior"));
     assertEquals("\n", StringsPlume.firstLineSeparator("hello\ngoodbye\rau revior\r\nWindows"));
