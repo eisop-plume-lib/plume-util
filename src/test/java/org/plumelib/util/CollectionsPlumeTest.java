@@ -1063,7 +1063,7 @@ final class CollectionsPlumeTest {
     Integer i10 = 10;
     Set<Integer> iota5 = new HashSet<>(Arrays.asList(0, 1, 2, 3, 4));
     assertEquals(i2, CollectionsPlume.getFromSet(iota5, i2));
-    assertEquals(null, CollectionsPlume.getFromSet(iota5, i10));
+    assertNull(CollectionsPlume.getFromSet(iota5, i10));
   }
 
   /** Test adjoin(). */
