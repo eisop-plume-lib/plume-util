@@ -6,7 +6,7 @@ plugins {
 
   // Code formatting; defines targets "spotlessApply" and "spotlessCheck"
   // Version 8.0.0 and later requires Java 17+.
-  id("com.diffplug.spotless").version("8.11.0")
+  id("com.diffplug.spotless").version("8.12.0")
 
   // Error Prone linter
   id("net.ltgt.errorprone").version("5.2.0") apply false
@@ -54,7 +54,7 @@ ext {
     useJdkVersionInt = majorVersionToInt(useJdkVersionProp)
   }
 
-  errorproneVersion = "2.52.0"
+  errorproneVersion = "2.53.0"
   eisopVersion = "3.49.5-eisop1"
   isJava17orHigher = (useJdkVersionInt >= 17)
   isJava21orHigher = (useJdkVersionInt >= 21)
